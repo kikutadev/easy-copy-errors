@@ -4,6 +4,13 @@
   "displayName": "easy-copy-errors",
   "description": "Easily copy error message",
   "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.97.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kikutadev/easy-copy-errors"
+  },
   "categories": [
     "Other"
   ],
@@ -36,35 +43,50 @@
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1"
   },
-    "contributes": {
+  "contributes": {
     "commands": [
-        {
-            "command": "easy-copy-errors.copyErrors",
-            "title": "Copy All Errors in Current File"
-        }
+      {
+        "command": "easy-copy-errors.copyErrors",
+        "title": "Copy All Errors in Current File"
+      },
+      {
+        "command": "easy-copy-errors.copyErrorsOnly",
+        "title": "Copy Only Errors in Current File"
+      }
     ],
     "keybindings": [
-        {
-            "command": "easy-copy-errors.copyErrors",
-            "key": "ctrl+shift+e",
-            "mac": "cmd+shift+e",
-            "when": "editorTextFocus"
-        }
-    ]
-  },
-  "configuration": {
-    "title": "Easy Copy Errors",
-    "properties": {
+      {
+        "command": "easy-copy-errors.copyErrors",
+        "key": "ctrl+shift+e",
+        "mac": "cmd+shift+e",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "easy-copy-errors.copyErrorsOnly",
+        "key": "ctrl+shift+a",
+        "mac": "cmd+shift+a",
+        "when": "editorTextFocus"
+      }
+    ],
+    "configuration": {
+      "title": "Easy Copy Errors",
+      "properties": {
+        "easyCopyErrors.useNewFormat": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use the new format that includes file path and line content"
+        },
         "easyCopyErrors.includeFileName": {
-            "type": "boolean",
-            "default": true,
-            "description": "Include the file name in the copied error message"
+          "type": "boolean",
+          "default": true,
+          "description": "Include the file name in the copied error message"
         },
         "easyCopyErrors.format": {
-            "type": "string",
-            "default": "[${severity}] Line ${line}, Column ${column}: ${message}",
-            "description": "Format of the copied error message. Available placeholders: ${severity}, ${line}, ${column}, ${message}, ${file}"
+          "type": "string",
+          "default": "[${severity}] Line ${line}, Column ${column}: ${message}",
+          "description": "Format of the copied error message. Available placeholders: ${severity}, ${line}, ${column}, ${message}, ${file}, ${relativePath}, ${lineContent}"
         }
+      }
     }
-}
+  }
 }
