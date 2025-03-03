@@ -37,5 +37,36 @@
     "typescript": "^5.7.3",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1"
-  }
+  },
+    "contributes": {
+    "commands": [
+        {
+            "command": "easy-copy-errors.copyErrors",
+            "title": "Copy All Errors in Current File"
+        }
+    ],
+    "keybindings": [
+        {
+            "command": "easy-copy-errors.copyErrors",
+            "key": "ctrl+shift+e",
+            "mac": "cmd+shift+e",
+            "when": "editorTextFocus"
+        }
+    ]
+  },
+  "configuration": {
+    "title": "Easy Copy Errors",
+    "properties": {
+        "easyCopyErrors.includeFileName": {
+            "type": "boolean",
+            "default": true,
+            "description": "Include the file name in the copied error message"
+        },
+        "easyCopyErrors.format": {
+            "type": "string",
+            "default": "[${severity}] Line ${line}, Column ${column}: ${message}",
+            "description": "Format of the copied error message. Available placeholders: ${severity}, ${line}, ${column}, ${message}, ${file}"
+        }
+    }
+}
 }
