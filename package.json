@@ -57,14 +57,14 @@
     "keybindings": [
       {
         "command": "easy-copy-errors.copyErrors",
-        "key": "ctrl+shift+e",
-        "mac": "cmd+shift+e",
+        "key": "ctrl+alt+e",
+        "mac": "cmd+option+e",
         "when": "editorTextFocus"
       },
       {
         "command": "easy-copy-errors.copyErrorsOnly",
-        "key": "ctrl+shift+a",
-        "mac": "cmd+shift+a",
+        "key": "ctrl+alt+a",
+        "mac": "cmd+option+a",
         "when": "editorTextFocus"
       }
     ],
@@ -88,5 +88,19 @@
         }
       }
     }
-  }
+  },
+  "homepage": "https://github.com/kikutadev/easy-copy-errors",
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
+  "keywords": [
+    "error",
+    "copy",
+    "diagnostic",
+    "generative ai"
+  ],
+  "extensionKind": [
+    "workspace"
+  ]
 }
