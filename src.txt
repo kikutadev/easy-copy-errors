@@ -432,7 +432,9 @@ export function parseVitestOutput(text: string): FailedTest[] {
       )
     );
 
-    if (!filePathMatch) continue;
+    if (!filePathMatch) {
+      continue;
+    }
     const filePath = filePathMatch[1];
 
     // 失敗したテスト行を検出
