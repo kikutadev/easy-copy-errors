@@ -2,7 +2,8 @@
   "name": "easy-copy-errors",
   "publisher": "kikuta",
   "displayName": "easy-copy-errors",
-  "description": "Easily copy error message",
+  "description": "%description%",
+  "license": "MIT",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.96.2"
@@ -36,6 +37,7 @@
     "@types/vscode": "^1.96.0",
     "@typescript-eslint/eslint-plugin": "^8.25.0",
     "@typescript-eslint/parser": "^8.25.0",
+    "@vscode/l10n-dev": "^0.0.35",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1",
     "esbuild": "^0.25.0",
@@ -50,46 +52,40 @@
         "easyCopyErrors.useNewFormat": {
           "type": "boolean",
           "default": true,
-          "description": "新しいフォーマットを使用する"
+          "description": "%config.useNewFormat%"
         },
         "easyCopyErrors.format": {
           "type": "string",
           "default": "[${severity}] Line ${line}, Column ${column}: ${message}",
-          "description": "診断情報のカスタムフォーマット"
+          "description": "%config.format%"
         },
         "easyCopyErrors.includeFileName": {
           "type": "boolean",
           "default": true,
-          "description": "出力にファイル名を含める"
+          "description": "%config.includeFileName%"
         },
         "easyCopyErrors.useGrouping": {
           "type": "boolean",
           "default": true,
-          "description": "同じエラーメッセージの診断情報をグループ化する"
+          "description": "%config.useGrouping%"
         },
         "easyCopyErrors.errorsOnly": {
           "type": "boolean",
           "default": false,
-          "description": "エラーのみをコピーする（警告などは無視）"
+          "description": "%config.errorsOnly%"
         }
       }
     },
     "commands": [
       {
         "command": "easy-copy-errors.copyErrors",
-        "title": "Copy Diagnostics"
+        "title": "%commands.copyErrors%",
+        "category": "Errors"
       },
       {
         "command": "easy-copy-errors.copyVitestResults",
-        "title": "Copy Vitest Results"
-      },
-      {
-        "command": "easy-copy-errors.selectVitestResults",
-        "title": "Select and Copy Vitest Results"
-      },
-      {
-        "command": "easy-copy-errors.copyAllVitestResults",
-        "title": "Copy All Vitest Results"
+        "title": "%commands.copyVitestResults%",
+        "category": "Vitest"
       }
     ]
   },
@@ -106,5 +102,9 @@
   ],
   "extensionKind": [
     "workspace"
-  ]
+  ],
+  "dependencies": {
+    "@vscode/l10n": "^0.0.18"
+  },
+  "l10n": "./src/l10n"
 }
