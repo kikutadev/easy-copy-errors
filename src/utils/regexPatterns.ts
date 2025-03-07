@@ -9,25 +9,26 @@ export const VitestPatterns = {
    * FAIL行パターン
    * 例: FAIL src/example.test.ts
    */
-  failLine: /FAIL\s+/g,
+  failLine: /\s*FAIL\s+/g,
 
   /**
    * テスト名抽出パターン
    * 例: NavigationHandler > handleBeforeUnload > ビーコンを正しく送信する
    */
-  testName: /^([^\n]+)/,
+  testName: />\s+([^>][^\n]+?)(?=\s+\d+ms|\s*$)/,
 
   /**
    * ファイルパス抽出パターン
    * 例: src/recorder/recorder/handlers/NavigationHandler.test.ts
    */
-  filePath: /([a-zA-Z0-9_\-/.]+\.(spec|test)\.[jt]sx?)/i,
+  filePath: /(?:FAIL|❯)\s+([a-zA-Z0-9_\-/.]+\.(spec|test)\.[jt]sx?)/i,
 
   /**
    * エラーメッセージ抽出パターン
    * 例: AssertionError: expected "spy" to be called with arguments: [ { type: 'HISTORY_NAVIGATE', …(4) } ]
    */
-  errorMessage: /(?:AssertionError|Error):\s+(.+?)(?=\n\s*❯|\n\s*\n|\n\s*$)/s,
+  errorMessage:
+    /(?:AssertionError|TypeError|Error):\s+(.+?)(?=\n\s*❯|\n\s*\n|\n\s*$)/s,
 
   /**
    * 行番号情報抽出パターン
@@ -39,8 +40,8 @@ export const VitestPatterns = {
    * コードスニペット抽出パターン群
    */
   codeSnippet: [
-    // Vitestの行番号つきコードスニペット (❯ から始まる行を含む最小限のブロック)
-    /❯\s+[\w/\.\-]+:\d+:\d+[\s\S]*?(?=\n\s*⎯{10,}|\n\s*FAIL|\n\s*$|$)/s,
+    // ❯行から始まり、行番号付きのコードブロックを含むパターン
+    /❯\s+[\w/\.\-]+:\d+:\d+\n[\s\S]*?\d+\s*\|\s*.+\n\s*\|.*\^.*\n(?:\s*\d+\s*\|\s*.+\n)*/s,
 
     // 行番号とパイプ記号を含むコードスニペット（より多くの行を含むようにパターンを改善）
     /\n\s*\d+\s*\|\s*.+\n\s*\d+\s*\|\s*.+\n\s*\d+\s*\|\s*.+(?:\n\s*\d+\s*\|\s*.+)*/s,
@@ -49,8 +50,9 @@ export const VitestPatterns = {
     /\n\s*\d+\s*\|.*\n\s*\|.*\^.*\n/s,
 
     // 以前のパターンをフォールバックとして保持
-    /(\[\n|\s+\[\n)[\s\S]*?(\]\n|\s+\]\n)/s,
-    /\n\s*at\s+[^\n]+\n\s*at\s+[^\n]+/s,
+    // より多くのスタックトレース行にマッチするパターン
+
+    /\n\s*at\s+[^\n]+(?:\n\s*at\s+[^\n]+)+/s,
     /\{\s*[\s\S]*?:\s*["'][\s\S]*?["'][\s\S]*?\}/s,
   ],
 
@@ -69,12 +71,19 @@ export const VitestPatterns = {
    */
   received: [
     // Receivedとその後のNumber of callsまでを一括で抽出するように改善
-    /Received:[\s\S]*?Number of calls:[\s\S]*?(?=\n\s*❯|\n\s*⎯{10,}|\n\s*$)/s,
+    /Received:[\s\S]*?(?:Number of calls:[^\n]*(?:\n\s*\n|\n\s*❯|\n\s*⎯{10,}|\n\s*$|$))/s,
     /Actual:[\s\S]*?(?=\n\s*$|$)/,
     /But got:[\s\S]*?(?=\n\s*$|$)/,
     /Instead received:[\s\S]*?(?=\n\s*$|$)/,
   ],
 
+  /**
+   * テストファイルパスとテスト名の組み合わせパターン
+   * 例: FAIL src/recorder/recorder/ActionRecorder.test.ts > ActionRecorder > 基本機能
+   */
+  filePathWithTestName:
+    /FAIL\s+([a-zA-Z0-9_\-/.]+\.(spec|test)\.[jt]sx?)\s+>\s+([^>][^\n]+?)(?=\s+\d+ms|\s*$)/,
+  
   /**
    * 失敗したテスト検出パターン群
    */

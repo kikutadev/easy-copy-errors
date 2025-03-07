@@ -53,9 +53,36 @@ export function parseVitestOutput(text: string): FailedTest[] {
     failedTests = extractTestsMethod3(text);
   }
 
-  return failedTests;
+  // 結果の後処理：重複の除去と整理
+  const uniqueTests = removeDuplicateTests(failedTests);
+
+  // デバッグ情報
+  console.log(`抽出されたテスト数: ${uniqueTests.length}`);
+  uniqueTests.forEach((test) => {
+    console.log(`ファイル: ${test.filePath}, テスト: ${test.testName}`);
+  });
+
+  return uniqueTests;
 }
 
+/**
+ * 抽出されたテストから重複を除去する
+ * ファイルパスとテスト名の組み合わせが同じものを重複と見なす
+ */
+function removeDuplicateTests(tests: FailedTest[]): FailedTest[] {
+  const uniqueTests: FailedTest[] = [];
+  const keys = new Set<string>();
+
+  for (const test of tests) {
+    const key = `${test.filePath}::${test.testName}`;
+    if (!keys.has(key)) {
+      keys.add(key);
+      uniqueTests.push(test);
+    }
+  }
+
+  return uniqueTests;
+}
 /**
  * 失敗したテストをファイル別にグループ化する
  * 同じファイルパスのテストをまとめ、ファイル名でソートする
@@ -97,23 +124,18 @@ export function formatFailedTests(failedTests: FailedTest[]): string {
     .map((test) => {
       let result = `file: ${test.filePath}`;
 
-      // 行番号情報があれば追加
-      if (test.lineNumber) {
-        result += `:${test.lineNumber}`;
-      }
-
-      result += `\ntest: ${test.testName}\nerror: ${test.errorMessage}`;
-
-      if (test.codeSnippet) {
-        result += `\n\ncode snippet:\n${test.codeSnippet}`;
-      }
-
+      // expectedとreceivedが存在する場合は先に表示
       if (test.expected) {
         result += `\n\nexpected:\n${test.expected}`;
       }
 
       if (test.received) {
         result += `\n\nreceived:\n${test.received}`;
+      }
+
+      // コードスニペットを最後に表示
+      if (test.codeSnippet) {
+        result += `\n\ncode snippet:\n${test.codeSnippet}`;
       }
 
       return result;
