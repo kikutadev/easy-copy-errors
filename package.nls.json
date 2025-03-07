@@ -1,0 +1,10 @@
+{
+  "description": "This extension allows you to easily copy errors from files or Vitest test results.",
+  "commands.copyErrors": "copyErrors: Copy Errors",
+  "commands.copyVitestResults": "copyVitestResults: Copy Vitest Results",
+  "config.useNewFormat": "useNewFormat: Use new format",
+  "config.format": "format: Custom format for diagnostics",
+  "config.includeFileName": "includeFileName: Include file name in output",
+  "config.useGrouping": "useGrouping: Group diagnostics with the same error message",
+  "config.errorsOnly": "errorsOnly: Copy errors only (ignore warnings)"
+}

@@ -1,0 +1,10 @@
+{
+  "description": "この拡張機能により、ファイル内のエラーや、Vitestのテスト結果を簡単にコピーできます。",
+  "commands.copyErrors": "copyErrors:エラーをコピーする",
+  "commands.copyVitestResults": "copyVitestResults:Vitestの結果をコピー",
+  "config.useNewFormat": "useNewFormat:新しいフォーマットを使用する",
+  "config.format": "format:診断情報のカスタムフォーマット",
+  "config.includeFileName": "includeFileName:出力にファイル名を含める",
+  "config.useGrouping": "useGrouping:同じエラーメッセージの診断情報をグループ化する",
+  "config.errorsOnly": "errorsOnly:エラーのみをコピーする（警告などは無視）"
+}
