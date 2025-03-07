@@ -1,0 +1,377 @@
+The following text is a code file. The structure of the text are sections that begin with ----, followed by a single line containing the file path and file name, followed by a variable amount of lines containing the file contents. The text representing the file ends when the symbols --END-- are encountered.
+----
+src/extension.ts
+import * as vscode from 'vscode';
+import {
+  copyAllDiagnosticsHandler,
+  copyErrorsOnlyHandler,
+} from './commands/errorCommands';
+
+export function activate(context: vscode.ExtensionContext) {
+  console.log('Extension "easy-copy-errors" is now active');
+
+  // Register commands
+  const allDiagnosticsCommand = vscode.commands.registerCommand(
+    'easy-copy-errors.copyErrors',
+    copyAllDiagnosticsHandler
+  );
+
+  const errorsOnlyCommand = vscode.commands.registerCommand(
+    'easy-copy-errors.copyErrorsOnly',
+    copyErrorsOnlyHandler
+  );
+
+
+
+  context.subscriptions.push(allDiagnosticsCommand, errorsOnlyCommand);
+}
+
+export function deactivate() {}
+
+----
+src/test/extension.test.ts
+import * as assert from 'assert';
+
+// You can import and use all API from the 'vscode' module
+// as well as import your extension to test it
+import * as vscode from 'vscode';
+// import * as myExtension from '../../extension';
+
+suite('Extension Test Suite', () => {
+	vscode.window.showInformationMessage('Start all tests.');
+
+	test('Sample test', () => {
+		assert.strictEqual(-1, [1, 2, 3].indexOf(5));
+		assert.strictEqual(-1, [1, 2, 3].indexOf(0));
+	});
+});
+
+----
+src/utils/file.ts
+import * as vscode from 'vscode';
+import * as path from 'path';
+
+/**
+ * 指定されたURIから、ワークスペースルートからの相対パスを取得
+ */
+export function getRelativePath(uri: vscode.Uri): string {
+  const workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
+  if (workspaceFolder) {
+    return path.relative(workspaceFolder.uri.fsPath, uri.fsPath);
+  }
+  return uri.fsPath;
+}
+
+/**
+ * 指定されたURIからファイル名のみを取得
+ */
+export function getFileName(uri: vscode.Uri): string {
+  return path.basename(uri.fsPath);
+}
+
+----
+src/utils/config.ts
+import * as vscode from 'vscode';
+
+/**
+ * 拡張機能の設定を取得
+ */
+export function getConfiguration() {
+  return vscode.workspace.getConfiguration('easyCopyErrors');
+}
+
+/**
+ * 新しいフォーマットを使用するかどうかを取得
+ */
+export function useNewFormat(): boolean {
+  return getConfiguration().get<boolean>('useNewFormat') ?? true;
+}
+
+/**
+ * カスタムフォーマット文字列を取得
+ */
+export function getCustomFormat(): string {
+  return (
+    getConfiguration().get<string>('format') ||
+    '[${severity}] Line ${line}, Column ${column}: ${message}'
+  );
+}
+
+/**
+ * ファイル名を含めるかどうかを取得
+ */
+export function includeFileName(): boolean {
+  return getConfiguration().get<boolean>('includeFileName') ?? true;
+}
+
+----
+src/commands/errorCommands.ts
+import * as vscode from 'vscode';
+import {
+  copyToClipboard,
+  showCopySuccessMessage,
+  showNoDiagnosticsMessage,
+  showNoEditorMessage,
+} from '../services/clipboardService';
+import {
+  buildDiagnosticContext,
+  filterDiagnostics,
+  getCurrentFileDiagnostics,
+} from '../services/diagnosticsService';
+import { formatDiagnostics } from '../services/formatterService';
+
+/**
+ * すべての診断情報をコピーするコマンドハンドラー
+ */
+export async function copyAllDiagnosticsHandler(): Promise<void> {
+  await copyDiagnosticsWithOptions({ errorsOnly: false });
+}
+
+/**
+ * エラーのみをコピーするコマンドハンドラー
+ */
+export async function copyErrorsOnlyHandler(): Promise<void> {
+  await copyDiagnosticsWithOptions({ errorsOnly: true });
+}
+
+/**
+ * オプションを指定して診断情報をコピー
+ */
+async function copyDiagnosticsWithOptions(options: {
+  errorsOnly: boolean;
+}): Promise<void> {
+  const diagnostics = getCurrentFileDiagnostics();
+
+  if (!diagnostics) {
+    showNoEditorMessage();
+    return;
+  }
+
+  const filteredDiagnostics = filterDiagnostics(diagnostics, options);
+
+  if (filteredDiagnostics.length === 0) {
+    showNoDiagnosticsMessage(options.errorsOnly);
+    return;
+  }
+
+  const editor = vscode.window.activeTextEditor!;
+  const formattedText = formatDiagnostics(
+    filteredDiagnostics,
+    editor.document,
+    buildDiagnosticContext
+  );
+
+  const success = await copyToClipboard(formattedText);
+
+  if (success) {
+    showCopySuccessMessage(options.errorsOnly);
+  }
+}
+
+----
+src/services/formatterService.ts
+import * as vscode from 'vscode';
+import { getFileName, getRelativePath } from '../utils/file';
+import {
+  useNewFormat,
+  getCustomFormat,
+  includeFileName,
+} from '../utils/config';
+import { DiagnosticContext } from './diagnosticsService';
+
+/**
+ * 診断情報をフォーマット
+ */
+export function formatDiagnostic(context: DiagnosticContext): string {
+  if (useNewFormat()) {
+    return formatNewStyle(context);
+  } else {
+    return formatCustomStyle(context);
+  }
+}
+
+/**
+ * 新しいスタイルでフォーマット（AIプロンプト向け）
+ */
+function formatNewStyle(context: DiagnosticContext): string {
+  const { document, line, lineContent, message } = context;
+  const relativePath = getRelativePath(document.uri);
+
+  return `file: ${relativePath}\nLine ${line}:      ${lineContent}\n${message}`;
+}
+
+/**
+ * カスタムスタイルでフォーマット（ユーザー設定に基づく）
+ */
+function formatCustomStyle(context: DiagnosticContext): string {
+  const { document, line, column, lineContent, severity, message } = context;
+  const fileName = getFileName(document.uri);
+  const relativePath = getRelativePath(document.uri);
+
+  let format = getCustomFormat();
+
+  let formatted = format
+    .replace(/\${severity}/g, severity)
+    .replace(/\${line}/g, line.toString())
+    .replace(/\${column}/g, column.toString())
+    .replace(/\${message}/g, message)
+    .replace(/\${lineContent}/g, lineContent);
+
+  if (includeFileName()) {
+    formatted = formatted
+      .replace(/\${file}/g, fileName)
+      .replace(/\${relativePath}/g, relativePath);
+  }
+
+  return formatted;
+}
+
+/**
+ * 複数の診断情報をフォーマットして結合
+ */
+export function formatDiagnostics(
+  diagnostics: vscode.Diagnostic[],
+  document: vscode.TextDocument,
+  buildContext: (
+    diag: vscode.Diagnostic,
+    doc: vscode.TextDocument
+  ) => DiagnosticContext
+): string {
+  return diagnostics
+    .map((diag) => formatDiagnostic(buildContext(diag, document)))
+    .join('\n\n');
+}
+
+----
+src/services/diagnosticsService.ts
+import * as vscode from 'vscode';
+
+/**
+ * 診断情報の重要度を文字列に変換
+ */
+export function getSeverityString(severity: vscode.DiagnosticSeverity): string {
+  switch (severity) {
+    case vscode.DiagnosticSeverity.Error:
+      return 'Error';
+    case vscode.DiagnosticSeverity.Warning:
+      return 'Warning';
+    case vscode.DiagnosticSeverity.Information:
+      return 'Info';
+    case vscode.DiagnosticSeverity.Hint:
+      return 'Hint';
+    default:
+      return 'Unknown';
+  }
+}
+
+/**
+ * 現在のファイルの診断情報を取得
+ */
+export function getCurrentFileDiagnostics(): vscode.Diagnostic[] | null {
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) {
+    return null;
+  }
+
+  return vscode.languages.getDiagnostics(editor.document.uri);
+}
+
+/**
+ * 診断情報をフィルタリング
+ */
+export function filterDiagnostics(
+  diagnostics: vscode.Diagnostic[],
+  filterOptions: {
+    errorsOnly?: boolean;
+    // 将来的に他のフィルタリングオプションを追加可能
+  } = {}
+): vscode.Diagnostic[] {
+  const { errorsOnly = false } = filterOptions;
+
+  if (errorsOnly) {
+    return diagnostics.filter(
+      (d) => d.severity === vscode.DiagnosticSeverity.Error
+    );
+  }
+
+  return diagnostics;
+}
+
+/**
+ * 診断情報のコンテキスト情報を構築
+ */
+export function buildDiagnosticContext(
+  diagnostic: vscode.Diagnostic,
+  document: vscode.TextDocument
+): DiagnosticContext {
+  return {
+    diagnostic,
+    document,
+    line: diagnostic.range.start.line + 1,
+    column: diagnostic.range.start.character + 1,
+    lineContent: document.lineAt(diagnostic.range.start.line).text,
+    severity: getSeverityString(diagnostic.severity),
+    message: diagnostic.message,
+  };
+}
+
+/**
+ * 診断情報のコンテキスト
+ */
+export interface DiagnosticContext {
+  diagnostic: vscode.Diagnostic;
+  document: vscode.TextDocument;
+  line: number;
+  column: number;
+  lineContent: string;
+  severity: string;
+  message: string;
+}
+
+----
+src/services/clipboardService.ts
+import * as vscode from 'vscode';
+
+/**
+ * テキストをクリップボードにコピー
+ */
+export async function copyToClipboard(text: string): Promise<boolean> {
+  try {
+    await vscode.env.clipboard.writeText(text);
+    return true;
+  } catch (error) {
+    console.error('Failed to copy to clipboard:', error);
+    return false;
+  }
+}
+
+/**
+ * クリップボードへのコピー成功時のメッセージを表示
+ */
+export function showCopySuccessMessage(isErrorsOnly: boolean = false): void {
+  const message = isErrorsOnly
+    ? 'Errors copied to clipboard.'
+    : 'All diagnostics copied to clipboard.';
+
+  vscode.window.showInformationMessage(message);
+}
+
+/**
+ * 診断情報がない場合のメッセージを表示
+ */
+export function showNoDiagnosticsMessage(isErrorsOnly: boolean = false): void {
+  const message = isErrorsOnly
+    ? 'No errors found in the current file.'
+    : 'No diagnostics found in the current file.';
+
+  vscode.window.showInformationMessage(message);
+}
+
+/**
+ * アクティブなエディタがない場合のメッセージを表示
+ */
+export function showNoEditorMessage(): void {
+  vscode.window.showInformationMessage('No active editor found.');
+}
+
+--END--

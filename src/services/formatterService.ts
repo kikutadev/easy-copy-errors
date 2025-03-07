@@ -1,3 +1,4 @@
+// src/services/formatterService.ts
 import * as vscode from 'vscode';
 import { getFileName, getRelativePath } from '../utils/file';
 import {
@@ -5,7 +6,7 @@ import {
   getCustomFormat,
   includeFileName,
 } from '../utils/config';
-import { DiagnosticContext } from './diagnosticsService';
+import { DiagnosticContext, DiagnosticGroup } from './diagnosticsService';
 
 /**
  * 診断情報をフォーマット
@@ -68,4 +69,42 @@ export function formatDiagnostics(
   return diagnostics
     .map((diag) => formatDiagnostic(buildContext(diag, document)))
     .join('\n\n');
+}
+
+/**
+ * グループ化された診断情報をフォーマット
+ */
+export function formatDiagnosticGroups(groups: DiagnosticGroup[]): string {
+  return groups
+    .map((group) => formatDiagnosticGroup(group))
+    .join('\n\n---\n\n');
+}
+
+/**
+ * 単一の診断情報グループをフォーマット（シンプルなスタイル）
+ * 同じファイル内で同じエラーメッセージのものをまとめる
+ */
+function formatDiagnosticGroup(group: DiagnosticGroup): string {
+  const { contexts, message } = group;
+
+  if (contexts.length === 0) {
+    return '';
+  }
+
+  // 最初のコンテキストからファイル情報を取得
+  const firstContext = contexts[0];
+  const relativePath = getRelativePath(firstContext.document.uri);
+
+  // ファイル情報を出力
+  let result = `file: ${relativePath}\n`;
+
+  // 各行の情報をフォーマット
+  contexts.forEach((context) => {
+    result += `Line ${context.line}: ${context.lineContent}\n`;
+  });
+
+  // エラーメッセージを最後に追加
+  result += `${message}`;
+
+  return result;
 }

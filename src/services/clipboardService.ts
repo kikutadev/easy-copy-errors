@@ -1,3 +1,4 @@
+// src/services/clipboardService.ts
 import * as vscode from 'vscode';
 
 /**
@@ -8,7 +9,7 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     await vscode.env.clipboard.writeText(text);
     return true;
   } catch (error) {
-    console.error('Failed to copy to clipboard:', error);
+    console.error('クリップボードへのコピーに失敗しました:', error);
     return false;
   }
 }
@@ -16,10 +17,17 @@ export async function copyToClipboard(text: string): Promise<boolean> {
 /**
  * クリップボードへのコピー成功時のメッセージを表示
  */
-export function showCopySuccessMessage(isErrorsOnly: boolean = false): void {
-  const message = isErrorsOnly
-    ? 'Errors copied to clipboard.'
-    : 'All diagnostics copied to clipboard.';
+export function showCopySuccessMessage(
+  isErrorsOnly: boolean = false,
+  isGrouped: boolean = false
+): void {
+  let message = isErrorsOnly ? 'エラーのみ' : 'すべての診断情報';
+
+  if (isGrouped) {
+    message += '（グループ化）';
+  }
+
+  message += 'をクリップボードにコピーしました！';
 
   vscode.window.showInformationMessage(message);
 }
@@ -29,8 +37,8 @@ export function showCopySuccessMessage(isErrorsOnly: boolean = false): void {
  */
 export function showNoDiagnosticsMessage(isErrorsOnly: boolean = false): void {
   const message = isErrorsOnly
-    ? 'No errors found in the current file.'
-    : 'No diagnostics found in the current file.';
+    ? '現在のファイルにエラーがありません。'
+    : '現在のファイルに診断情報がありません。';
 
   vscode.window.showInformationMessage(message);
 }
@@ -39,5 +47,7 @@ export function showNoDiagnosticsMessage(isErrorsOnly: boolean = false): void {
  * アクティブなエディタがない場合のメッセージを表示
  */
 export function showNoEditorMessage(): void {
-  vscode.window.showInformationMessage('No active editor found.');
+  vscode.window.showInformationMessage(
+    'アクティブなエディタが見つかりません。'
+  );
 }

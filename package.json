@@ -52,6 +52,22 @@
       {
         "command": "easy-copy-errors.copyErrorsOnly",
         "title": "Copy Only Errors in Current File"
+      },
+      {
+        "command": "easy-copy-errors.copyVitestResults",
+        "title": "Copy Vitest Results"
+      },
+      {
+        "command": "easy-copy-errors.copyGroupedErrors",
+        "title": "Copy Grouped Errors"
+      },
+      {
+        "command": "easy-copy-errors.copyGrupedErrorsOnly",
+        "title": "Copy Grouped Errors Only"
+      },
+      {
+        "command": "easy-copy-errors.copyVitestResults",
+        "title": "Copy Vitest Results"
       }
     ],
     "keybindings": [
@@ -65,6 +81,24 @@
         "command": "easy-copy-errors.copyErrorsOnly",
         "key": "ctrl+alt+a",
         "mac": "cmd+option+a",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "easy-copy-errors.copyGroupedErrors",
+        "key": "ctrl+alt+g",
+        "mac": "cmd+option+g",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "easy-copy-errors.copyGroupedErrorsOnly",
+        "key": "ctrl+alt+a",
+        "mac": "cmd+option+a",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "easy-copy-errors.copyVitestResults",
+        "key": "ctrl+alt+v",
+        "mac": "cmd+option+v",
         "when": "editorTextFocus"
       }
     ],
@@ -85,6 +119,11 @@
           "type": "string",
           "default": "[${severity}] Line ${line}, Column ${column}: ${message}",
           "description": "Format of the copied error message. Available placeholders: ${severity}, ${line}, ${column}, ${message}, ${file}, ${relativePath}, ${lineContent}"
+        },
+        "easyCopyErrors.useGrouping": {
+          "type": "boolean",
+          "default": false,
+          "description": "Group the same error messages in the same file"
         }
       }
     }

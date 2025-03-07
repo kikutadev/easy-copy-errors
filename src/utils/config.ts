@@ -1,3 +1,4 @@
+// src/utils/config.ts
 import * as vscode from 'vscode';
 
 /**
@@ -29,4 +30,11 @@ export function getCustomFormat(): string {
  */
 export function includeFileName(): boolean {
   return getConfiguration().get<boolean>('includeFileName') ?? true;
+}
+
+/**
+ * エラーをグループ化するかどうかを取得
+ */
+export function useGrouping(): boolean {
+  return getConfiguration().get<boolean>('useGrouping') ?? false;
 }

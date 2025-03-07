@@ -1,3 +1,4 @@
+// src/services/diagnosticsService.ts
 import * as vscode from 'vscode';
 
 /**
@@ -37,7 +38,6 @@ export function filterDiagnostics(
   diagnostics: vscode.Diagnostic[],
   filterOptions: {
     errorsOnly?: boolean;
-    // 将来的に他のフィルタリングオプションを追加可能
   } = {}
 ): vscode.Diagnostic[] {
   const { errorsOnly = false } = filterOptions;
@@ -80,4 +80,64 @@ export interface DiagnosticContext {
   lineContent: string;
   severity: string;
   message: string;
+}
+
+/**
+ * 診断情報のグループ
+ * 同じファイル内で同じエラーメッセージを持つものをグループ化
+ */
+export interface DiagnosticGroup {
+  // グループ内のコンテキスト一覧
+  contexts: DiagnosticContext[];
+  // 共通のファイルパス
+  filePath: string;
+  // 共通のエラーメッセージ
+  message: string;
+  // グループに固有のID
+  id: string;
+}
+
+/**
+ * 診断情報をグループ化する
+ * 同じファイル内の同じエラーメッセージのものをまとめる
+ */
+export function groupDiagnostics(
+  diagnostics: vscode.Diagnostic[],
+  document: vscode.TextDocument
+): DiagnosticGroup[] {
+  // ファイル+メッセージの組み合わせでグループ化
+  const groups: { [key: string]: DiagnosticGroup } = {};
+
+  // 各診断情報を処理
+  diagnostics.forEach((diagnostic) => {
+    const context = buildDiagnosticContext(diagnostic, document);
+    const message = diagnostic.message;
+    const filePath = document.fileName;
+
+    // グループのキーを作成（ファイルパス+メッセージ）
+    const groupKey = `${filePath}:${message}`;
+
+    if (!groups[groupKey]) {
+      groups[groupKey] = {
+        contexts: [],
+        filePath,
+        message,
+        id: groupKey,
+      };
+    }
+
+    groups[groupKey].contexts.push(context);
+  });
+
+  // 結果を配列に変換してソート
+  return (
+    Object.values(groups)
+      // 行番号でソート
+      .map((group) => {
+        group.contexts.sort((a, b) => a.line - b.line);
+        return group;
+      })
+      // グループをファイルパスでソート
+      .sort((a, b) => a.filePath.localeCompare(b.filePath))
+  );
 }
