@@ -4,6 +4,7 @@ import {
   extractTestsMethod2,
   extractTestsMethod3,
 } from './vitestExtractorService';
+import * as vscode from 'vscode';
 
 /**
  * 失敗したVitestテストの情報
@@ -40,7 +41,7 @@ export function parseVitestOutput(text: string): FailedTest[] {
   // 失敗したテストが見つからなかった場合、別の抽出方法を試す
   if (failedTests.length === 0) {
     console.log(
-      '抽出方法1で失敗したテストが見つかりませんでした。方法2を試します。'
+      vscode.l10n.t('抽出方法1で失敗したテストが見つかりませんでした。方法2を試します。')
     );
     failedTests = extractTestsMethod2(text);
   }
@@ -48,7 +49,9 @@ export function parseVitestOutput(text: string): FailedTest[] {
   // それでも見つからない場合、最後の抽出方法を試す
   if (failedTests.length === 0) {
     console.log(
-      '抽出方法2で失敗したテストが見つかりませんでした。方法3を試します。'
+      vscode.l10n.t(
+        '抽出方法2で失敗したテストが見つかりませんでした。方法3を試します。'
+      )
     );
     failedTests = extractTestsMethod3(text);
   }
@@ -57,9 +60,13 @@ export function parseVitestOutput(text: string): FailedTest[] {
   const uniqueTests = removeDuplicateTests(failedTests);
 
   // デバッグ情報
-  console.log(`抽出されたテスト数: ${uniqueTests.length}`);
+  console.log(
+    vscode.l10n.t(`抽出されたテスト数: {uniqueTests.length}`)
+  );
   uniqueTests.forEach((test) => {
-    console.log(`ファイル: ${test.filePath}, テスト: ${test.testName}`);
+    console.log(
+      vscode.l10n.t(`ファイル: {test.filePath}, テスト: {test.testName}`)
+    );
   });
 
   return uniqueTests;

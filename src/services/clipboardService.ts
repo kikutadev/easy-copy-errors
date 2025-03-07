@@ -9,7 +9,10 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     await vscode.env.clipboard.writeText(text);
     return true;
   } catch (error) {
-    console.error('クリップボードへのコピーに失敗しました:', error);
+    console.error(
+      vscode.l10n.t('クリップボードへのコピーに失敗しました:'),
+      error
+    );
     return false;
   }
 }
@@ -57,9 +60,11 @@ export function showTimedMessage(
  * クリップボードへのコピー成功時のメッセージを表示
  */
 export function showCopySuccessMessage(isErrorsOnly: boolean = false): void {
-  let message = isErrorsOnly ? 'エラーのみ' : 'すべての診断情報';
+  let message = isErrorsOnly
+    ? vscode.l10n.t('エラーのみ')
+    : vscode.l10n.t('すべての診断情報');
 
-  message += 'をクリップボードにコピーしました！';
+   message =  vscode.l10n.t('(message)をクリップボードにコピーしました！');
 
   showTimedMessage(message, 'info');
 }
@@ -69,8 +74,8 @@ export function showCopySuccessMessage(isErrorsOnly: boolean = false): void {
  */
 export function showNoDiagnosticsMessage(isErrorsOnly: boolean = false): void {
   const message = isErrorsOnly
-    ? '現在のファイルにエラーがありません。'
-    : '現在のファイルに診断情報がありません。';
+    ? vscode.l10n.t('現在のファイルにエラーがありません。')
+    : vscode.l10n.t('現在のファイルに診断情報がありません。');
 
   showTimedMessage(message, 'info');
 }
@@ -79,5 +84,8 @@ export function showNoDiagnosticsMessage(isErrorsOnly: boolean = false): void {
  * アクティブなエディタがない場合のメッセージを表示
  */
 export function showNoEditorMessage(): void {
-  showTimedMessage('アクティブなエディタが見つかりません。', 'info');
+  showTimedMessage(
+    vscode.l10n.t('アクティブなエディタが見つかりません。'),
+    'info'
+  );
 }

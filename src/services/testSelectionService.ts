@@ -65,8 +65,8 @@ export async function showIndividualTestSelectionUI(
 
   // 「全てのテストを選択」オプションを追加
   const allTestsOption: vscode.QuickPickItem = {
-    label: '$(check-all) 全てのテストを選択',
-    description: `(${fileGroup.failedTests.length}件)`,
+    label: vscode.l10n.t('(check-all) 全てのテストを選択'),
+    description: `({fileGroup.failedTests.length}件)`,
     kind: vscode.QuickPickItemKind.Separator,
   };
 
@@ -82,7 +82,7 @@ export async function showIndividualTestSelectionUI(
   const selectedItems = await vscode.window.showQuickPick(
     [allTestsOption, ...testItems],
     {
-      placeHolder: 'コピーするテストを選択してください',
+      placeHolder: vscode.l10n.t('コピーするテストを選択してください'),
       canPickMany: true,
       matchOnDescription: true,
       matchOnDetail: true,

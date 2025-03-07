@@ -50,6 +50,18 @@ package.json
     "typescript": "^5.7.3"
   },
   "contributes": {
+    "keybindings": [
+      {
+        "command": "easy-copy-errors.copyErrors",
+        "key": "ctrl+alt+e",
+        "mac": "cmd+opt+e"
+      },
+      {
+        "command": "easy-copy-errors.copyVitestResults",
+        "key": "ctrl+alt+t",
+        "mac": "cmd+opt+t"
+      }
+    ],
     "configuration": {
       "title": "Easy Copy Errors",
       "properties": {

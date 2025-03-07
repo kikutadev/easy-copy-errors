@@ -67,7 +67,7 @@ export async function copyDiagnosticsHandler(): Promise<void> {
   const success = await copyToClipboard(formattedText);
 
   if (success) {
-    showCopySuccessMessage(filterErrors, grouped);
+    showCopySuccessMessage(filterErrors);
   }
 }
 

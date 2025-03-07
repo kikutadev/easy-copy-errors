@@ -15,7 +15,7 @@ export async function captureTerminalText(): Promise<string | null> {
     // アクティブなターミナルが存在するか確認
     if (!vscode.window.activeTerminal) {
       vscode.window.showWarningMessage(
-        'アクティブなターミナルが見つかりません'
+        vscode.l10n.t('アクティブなターミナルが見つかりません')
       );
       return null;
     }
@@ -39,7 +39,10 @@ export async function captureTerminalText(): Promise<string | null> {
 
     return terminalText;
   } catch (error) {
-    console.error('ターミナルテキストのキャプチャに失敗:', error);
+    console.error(
+      vscode.l10n.t('ターミナルテキストのキャプチャに失敗:'),
+      error
+    );
     // 元のクリップボード内容を復元
     await vscode.env.clipboard.writeText(originalClipboard);
     return null;

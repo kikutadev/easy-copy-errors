@@ -1,0 +1,23 @@
+{
+  "拡張機能が読み込まれました": "Extension activated",
+  "抽出方法1で失敗したテストが見つかりませんでした。方法2を試します。": "No failed tests found using extraction method 1. Trying method 2.",
+  "抽出方法2で失敗したテストが見つかりませんでした。方法3を試します。": "No failed tests found using extraction method 2. Trying method 3.",
+  "抽出されたテスト数: {uniqueTests.length}": "Number of extracted tests: {uniqueTests.length}",
+  "ファイル: {test.filePath}, テスト: {test.testName}": "File: {test.filePath}, Test: {test.testName}",
+  "(check-all) 全てのテストを選択": "Select all tests",
+  "コピーするテストを選択してください": "Please select tests to copy",
+  "アクティブなターミナルが見つかりません": "No active terminal found",
+  "ターミナルテキストのキャプチャに失敗:": "Failed to capture terminal text:",
+  "クリップボードへのコピーに失敗しました:": "Failed to copy to clipboard:",
+  "エラーのみ": "Errors only",
+  "すべての診断情報": "All diagnostics",
+  "(message)をクリップボードにコピーしました！": "Copied to clipboard!",
+  "現在のファイルにエラーがありません。": "No errors in the current file.",
+  "現在のファイルに診断情報がありません。": "No diagnostics in the current file.",
+  "アクティブなエディタが見つかりません。": "No active editor found.",
+  "Vitestテスト結果をキャプチャしています...": "Capturing Vitest test results...",
+  "ターミナルテキストのキャプチャに失敗しました": "Failed to capture terminal text",
+  "失敗したテストが見つかりませんでした": "No failed tests found",
+  "{selectedTests.length}件の失敗したテストをコピーしました": "Copied {selectedTests.length} failed tests",
+  "テスト結果のコピーに失敗しました": "Failed to copy test results"
+}

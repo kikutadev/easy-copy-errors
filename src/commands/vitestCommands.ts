@@ -17,7 +17,7 @@ import {
  */
 export async function copySelectedVitestResultsHandler(): Promise<void> {
   vscode.window.showInformationMessage(
-    'Vitestテスト結果をキャプチャしています...'
+    vscode.l10n.t('Vitestテスト結果をキャプチャしています...')
   );
 
   // ターミナルテキストをキャプチャ
@@ -25,7 +25,7 @@ export async function copySelectedVitestResultsHandler(): Promise<void> {
 
   if (!terminalText) {
     vscode.window.showErrorMessage(
-      'ターミナルテキストのキャプチャに失敗しました'
+      vscode.l10n.t('ターミナルテキストのキャプチャに失敗しました')
     );
     return;
   }
@@ -35,7 +35,7 @@ export async function copySelectedVitestResultsHandler(): Promise<void> {
 
   if (failedTests.length === 0) {
     vscode.window.showInformationMessage(
-      '失敗したテストが見つかりませんでした'
+      vscode.l10n.t('失敗したテストが見つかりませんでした')
     );
     return;
   }
@@ -63,9 +63,11 @@ export async function copySelectedVitestResultsHandler(): Promise<void> {
 
   if (success) {
     vscode.window.showInformationMessage(
-      `${selectedTests.length}件の失敗したテストをコピーしました`
+      vscode.l10n.t(`{selectedTests.length}件の失敗したテストをコピーしました`)
     );
   } else {
-    vscode.window.showErrorMessage('テスト結果のコピーに失敗しました');
+    vscode.window.showErrorMessage(
+      vscode.l10n.t('テスト結果のコピーに失敗しました')
+    );
   }
 }

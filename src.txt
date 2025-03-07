@@ -27,10 +27,57 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() {}
 
 ----
+src/l10n/bundle.l10n.en.json
+{
+  "拡張機能が読み込まれました": "Extension activated",
+  "抽出方法1で失敗したテストが見つかりませんでした。方法2を試します。": "No failed tests found using extraction method 1. Trying method 2.",
+  "抽出方法2で失敗したテストが見つかりませんでした。方法3を試します。": "No failed tests found using extraction method 2. Trying method 3.",
+  "抽出されたテスト数: {uniqueTests.length}": "Number of extracted tests: {uniqueTests.length}",
+  "ファイル: {test.filePath}, テスト: {test.testName}": "File: {test.filePath}, Test: {test.testName}",
+  "(check-all) 全てのテストを選択": "Select all tests",
+  "コピーするテストを選択してください": "Please select tests to copy",
+  "アクティブなターミナルが見つかりません": "No active terminal found",
+  "ターミナルテキストのキャプチャに失敗:": "Failed to capture terminal text:",
+  "クリップボードへのコピーに失敗しました:": "Failed to copy to clipboard:",
+  "エラーのみ": "Errors only",
+  "すべての診断情報": "All diagnostics",
+  "(message)をクリップボードにコピーしました！": "Copied to clipboard!",
+  "現在のファイルにエラーがありません。": "No errors in the current file.",
+  "現在のファイルに診断情報がありません。": "No diagnostics in the current file.",
+  "アクティブなエディタが見つかりません。": "No active editor found.",
+  "Vitestテスト結果をキャプチャしています...": "Capturing Vitest test results...",
+  "ターミナルテキストのキャプチャに失敗しました": "Failed to capture terminal text",
+  "失敗したテストが見つかりませんでした": "No failed tests found",
+  "{selectedTests.length}件の失敗したテストをコピーしました": "Copied {selectedTests.length} failed tests",
+  "テスト結果のコピーに失敗しました": "Failed to copy test results"
+}
+
+----
 src/l10n/bundle.l10n.json
 {
-  "extension activated": "extension activated"
+  "拡張機能が読み込まれました": "extension activated",
+  "抽出方法1で失敗したテストが見つかりませんでした。方法2を試します。": "抽出方法1で失敗したテストが見つかりませんでした。方法2を試します。",
+  "抽出方法2で失敗したテストが見つかりませんでした。方法3を試します。": "抽出方法2で失敗したテストが見つかりませんでした。方法3を試します。",
+  "抽出されたテスト数: {uniqueTests.length}": "抽出されたテスト数: {uniqueTests.length}",
+  "ファイル: {test.filePath}, テスト: {test.testName}": "ファイル: {test.filePath}, テスト: {test.testName}",
+  "(check-all) 全てのテストを選択": "(check-all) 全てのテストを選択",
+  "コピーするテストを選択してください": "コピーするテストを選択してください",
+  "アクティブなターミナルが見つかりません": "アクティブなターミナルが見つかりません",
+  "ターミナルテキストのキャプチャに失敗:": "ターミナルテキストのキャプチャに失敗:",
+  "クリップボードへのコピーに失敗しました:": "クリップボードへのコピーに失敗しました:",
+  "エラーのみ": "エラーのみ",
+  "すべての診断情報": "すべての診断情報",
+  "(message)をクリップボードにコピーしました！": "(message)をクリップボードにコピーしました！",
+  "現在のファイルにエラーがありません。": "現在のファイルにエラーがありません。",
+  "現在のファイルに診断情報がありません。": "現在のファイルに診断情報がありません。",
+  "アクティブなエディタが見つかりません。": "アクティブなエディタが見つかりません。",
+  "Vitestテスト結果をキャプチャしています...": "Vitestテスト結果をキャプチャしています...",
+  "ターミナルテキストのキャプチャに失敗しました": "ターミナルテキストのキャプチャに失敗しました",
+  "失敗したテストが見つかりませんでした": "失敗したテストが見つかりませんでした",
+  "{selectedTests.length}件の失敗したテストをコピーしました": "{selectedTests.length}件の失敗したテストをコピーしました",
+  "テスト結果のコピーに失敗しました": "テスト結果のコピーに失敗しました"
 }
+
 ----
 src/test/extension.test.ts
 import * as assert from 'assert';
@@ -67,14 +114,14 @@ export const VitestPatterns = {
   /**
    * テスト名抽出パターン
    * 例: NavigationHandler > handleBeforeUnload > ビーコンを正しく送信する
+   * 日本語を含むテスト名も適切に抽出できるように改善
    */
-  testName: /^([^\n]+)/,
-
+  testName: /(?:×|✗|✘)\s+([^\n]+?)(?=\s+\d+ms|\s*$)/,
   /**
    * ファイルパス抽出パターン
-   * 例: src/recorder/recorder/handlers/NavigationHandler.test.ts
+   * ❯の後のファイルパスを優先的に抽出するように改善
    */
-  filePath: /([a-zA-Z0-9_\-/.]+\.(spec|test)\.[jt]sx?)/i,
+  filePath: /❯\s+([a-zA-Z0-9_\-/.]+\.(spec|test)\.[jt]sx?)/i,
 
   /**
    * エラーメッセージ抽出パターン
@@ -89,6 +136,23 @@ export const VitestPatterns = {
    */
   lineNumber: /❯\s+[\w/\.\-]+:(\d+:\d+)/,
 
+  /**
+   * ❯行からファイルパスを抽出するパターン
+   * 例: ❯ src/recorder/player/playSimulators.test.ts
+   */
+  testFileLinePattern: /❯\s+([a-zA-Z0-9_\-/.]+\.(spec|test)\.[jt]sx?)/i,
+
+  /**
+   * ×マークからテスト名を抽出するパターン
+   * 例: × シミュレーション関数のテスト > simulateClick > 要素が見つかった場合にクリックを実行すること 9ms
+   */
+  failedTestNamePattern: /(?:×|✗|✘)\s+([^\n]+?)(?=\s+\d+ms|\s*$)/,
+
+  /**
+   * 矢印エラーメッセージパターン
+   * 例: → expected "spy" to be called with arguments: [ '#test-button' ]
+   */
+  arrowErrorMessagePattern: /→\s+(.+?)(?=\n\n|\n\s*Received:|\n\s*$)/s,
   /**
    * コードスニペット抽出パターン群
    */
@@ -304,7 +368,7 @@ import {
  */
 export async function copySelectedVitestResultsHandler(): Promise<void> {
   vscode.window.showInformationMessage(
-    'Vitestテスト結果をキャプチャしています...'
+    vscode.l10n.t('Vitestテスト結果をキャプチャしています...')
   );
 
   // ターミナルテキストをキャプチャ
@@ -312,7 +376,7 @@ export async function copySelectedVitestResultsHandler(): Promise<void> {
 
   if (!terminalText) {
     vscode.window.showErrorMessage(
-      'ターミナルテキストのキャプチャに失敗しました'
+      vscode.l10n.t('ターミナルテキストのキャプチャに失敗しました')
     );
     return;
   }
@@ -322,7 +386,7 @@ export async function copySelectedVitestResultsHandler(): Promise<void> {
 
   if (failedTests.length === 0) {
     vscode.window.showInformationMessage(
-      '失敗したテストが見つかりませんでした'
+      vscode.l10n.t('失敗したテストが見つかりませんでした')
     );
     return;
   }
@@ -350,10 +414,12 @@ export async function copySelectedVitestResultsHandler(): Promise<void> {
 
   if (success) {
     vscode.window.showInformationMessage(
-      `${selectedTests.length}件の失敗したテストをコピーしました`
+      vscode.l10n.t(`{selectedTests.length}件の失敗したテストをコピーしました`)
     );
   } else {
-    vscode.window.showErrorMessage('テスト結果のコピーに失敗しました');
+    vscode.window.showErrorMessage(
+      vscode.l10n.t('テスト結果のコピーに失敗しました')
+    );
   }
 }
 
@@ -428,7 +494,7 @@ export async function copyDiagnosticsHandler(): Promise<void> {
   const success = await copyToClipboard(formattedText);
 
   if (success) {
-    showCopySuccessMessage(filterErrors, grouped);
+    showCopySuccessMessage(filterErrors);
   }
 }
 
@@ -621,8 +687,8 @@ export async function showIndividualTestSelectionUI(
 
   // 「全てのテストを選択」オプションを追加
   const allTestsOption: vscode.QuickPickItem = {
-    label: '$(check-all) 全てのテストを選択',
-    description: `(${fileGroup.failedTests.length}件)`,
+    label: vscode.l10n.t('(check-all) 全てのテストを選択'),
+    description: `({fileGroup.failedTests.length}件)`,
     kind: vscode.QuickPickItemKind.Separator,
   };
 
@@ -638,7 +704,7 @@ export async function showIndividualTestSelectionUI(
   const selectedItems = await vscode.window.showQuickPick(
     [allTestsOption, ...testItems],
     {
-      placeHolder: 'コピーするテストを選択してください',
+      placeHolder: vscode.l10n.t('コピーするテストを選択してください'),
       canPickMany: true,
       matchOnDescription: true,
       matchOnDetail: true,
@@ -672,6 +738,7 @@ import {
   extractTestsMethod2,
   extractTestsMethod3,
 } from './vitestExtractorService';
+import * as vscode from 'vscode';
 
 /**
  * 失敗したVitestテストの情報
@@ -708,7 +775,7 @@ export function parseVitestOutput(text: string): FailedTest[] {
   // 失敗したテストが見つからなかった場合、別の抽出方法を試す
   if (failedTests.length === 0) {
     console.log(
-      '抽出方法1で失敗したテストが見つかりませんでした。方法2を試します。'
+      vscode.l10n.t('抽出方法1で失敗したテストが見つかりませんでした。方法2を試します。')
     );
     failedTests = extractTestsMethod2(text);
   }
@@ -716,7 +783,9 @@ export function parseVitestOutput(text: string): FailedTest[] {
   // それでも見つからない場合、最後の抽出方法を試す
   if (failedTests.length === 0) {
     console.log(
-      '抽出方法2で失敗したテストが見つかりませんでした。方法3を試します。'
+      vscode.l10n.t(
+        '抽出方法2で失敗したテストが見つかりませんでした。方法3を試します。'
+      )
     );
     failedTests = extractTestsMethod3(text);
   }
@@ -725,9 +794,13 @@ export function parseVitestOutput(text: string): FailedTest[] {
   const uniqueTests = removeDuplicateTests(failedTests);
 
   // デバッグ情報
-  console.log(`抽出されたテスト数: ${uniqueTests.length}`);
+  console.log(
+    vscode.l10n.t(`抽出されたテスト数: {uniqueTests.length}`)
+  );
   uniqueTests.forEach((test) => {
-    console.log(`ファイル: ${test.filePath}, テスト: ${test.testName}`);
+    console.log(
+      vscode.l10n.t(`ファイル: {test.filePath}, テスト: {test.testName}`)
+    );
   });
 
   return uniqueTests;
@@ -886,8 +959,20 @@ export function extractCodeSnippet(text: string): string {
  * @param text 解析対象のテキスト
  * @returns 抽出された失敗テスト情報の配列
  */
+/**
+ * Vitestのテスト結果から失敗したテストを抽出する（方法1）
+ */
 export function extractTestsMethod1(text: string): FailedTest[] {
   const failedTests: FailedTest[] = [];
+
+  // ファイルパスをテスト出力から優先的に抽出
+  const filePathMatch = text.match(VitestPatterns.testFileLinePattern);
+
+  // ×マークを使ってテスト名を抽出
+  const testNameMatch = text.match(VitestPatterns.failedTestNamePattern);
+
+  // →を使ってエラーメッセージを抽出
+  const errorMessageMatch = text.match(VitestPatterns.arrowErrorMessagePattern);
 
   // ファイルパスとテスト名を一度に抽出するパターンを試す
   const fileTestMatches = Array.from(
@@ -1454,7 +1539,7 @@ export async function captureTerminalText(): Promise<string | null> {
     // アクティブなターミナルが存在するか確認
     if (!vscode.window.activeTerminal) {
       vscode.window.showWarningMessage(
-        'アクティブなターミナルが見つかりません'
+        vscode.l10n.t('アクティブなターミナルが見つかりません')
       );
       return null;
     }
@@ -1478,7 +1563,10 @@ export async function captureTerminalText(): Promise<string | null> {
 
     return terminalText;
   } catch (error) {
-    console.error('ターミナルテキストのキャプチャに失敗:', error);
+    console.error(
+      vscode.l10n.t('ターミナルテキストのキャプチャに失敗:'),
+      error
+    );
     // 元のクリップボード内容を復元
     await vscode.env.clipboard.writeText(originalClipboard);
     return null;
@@ -1498,14 +1586,17 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     await vscode.env.clipboard.writeText(text);
     return true;
   } catch (error) {
-    console.error('クリップボードへのコピーに失敗しました:', error);
+    console.error(
+      vscode.l10n.t('クリップボードへのコピーに失敗しました:'),
+      error
+    );
     return false;
   }
 }
 
 /**
  * タイムアウト付きの通知メッセージを表示する
- * 指定した時間（ミリ秒）後に自動的に通知を閉じる
+ * VSCodeのプログレスAPIを使用して、指定した時間後に自動的に閉じる通知を表示
  * @param message 表示するメッセージ
  * @param type メッセージの種類 ('info', 'warning', 'error')
  * @param timeout 自動的に閉じるまでの時間（ミリ秒）
@@ -1513,51 +1604,45 @@ export async function copyToClipboard(text: string): Promise<boolean> {
 export function showTimedMessage(
   message: string,
   type: 'info' | 'warning' | 'error' = 'info',
-  timeout: number = 5000
+  timeout: number = 3000
 ): void {
-  let messagePromise: Thenable<any>;
-
-  // メッセージの種類に応じた表示メソッドを使用
-  switch (type) {
-    case 'warning':
-      messagePromise = vscode.window.showWarningMessage(message);
-      break;
-    case 'error':
-      messagePromise = vscode.window.showErrorMessage(message);
-      break;
-    case 'info':
-    default:
-      messagePromise = vscode.window.showInformationMessage(message);
-      break;
+  // アイコンをメッセージタイプに基づいて設定
+  let icon = '$(info)';
+  if (type === 'warning') {
+    icon = '$(warning)';
+  } else if (type === 'error') {
+    icon = '$(error)';
   }
 
-  // タイムアウト後にメッセージを閉じる
-  setTimeout(() => {
-    // VSCodeの内部APIを使用してメッセージを閉じる
-    // @ts-ignore: VSCodeの内部APIへのアクセス
-    if (messagePromise && messagePromise.cancel) {
-      // @ts-ignore: VSCodeの内部APIへのアクセス
-      messagePromise.cancel();
+  // withProgressを使用して一時的な通知を表示
+  vscode.window.withProgress(
+    {
+      location: vscode.ProgressLocation.Notification,
+      title: `${icon} ${message}`,
+      cancellable: false,
+    },
+    async () => {
+      // タイムアウトまで待機
+      await new Promise((resolve) => setTimeout(resolve, timeout));
+      // タイムアウト後に自動的に閉じる（この関数が完了すると通知が閉じる）
+      return;
     }
-  }, timeout);
+  );
+
+  // タイプに応じてステータスバーにも表示
+  // const statusBarMessage = vscode.window.setStatusBarMessage(message, timeout);
 }
 
 /**
  * クリップボードへのコピー成功時のメッセージを表示
  */
-export function showCopySuccessMessage(
-  isErrorsOnly: boolean = false,
-  isGrouped: boolean = false
-): void {
-  let message = isErrorsOnly ? 'エラーのみ' : 'すべての診断情報';
+export function showCopySuccessMessage(isErrorsOnly: boolean = false): void {
+  let message = isErrorsOnly
+    ? vscode.l10n.t('エラーのみ')
+    : vscode.l10n.t('すべての診断情報');
 
-  if (isGrouped) {
-    message += '（グループ化）';
-  }
+   message =  vscode.l10n.t('(message)をクリップボードにコピーしました！');
 
-  message += 'をクリップボードにコピーしました！';
-
-  -vscode.window.showInformationMessage(message);
   showTimedMessage(message, 'info');
 }
 
@@ -1566,8 +1651,8 @@ export function showCopySuccessMessage(
  */
 export function showNoDiagnosticsMessage(isErrorsOnly: boolean = false): void {
   const message = isErrorsOnly
-    ? '現在のファイルにエラーがありません。'
-    : '現在のファイルに診断情報がありません。';
+    ? vscode.l10n.t('現在のファイルにエラーがありません。')
+    : vscode.l10n.t('現在のファイルに診断情報がありません。');
 
   showTimedMessage(message, 'info');
 }
@@ -1576,7 +1661,10 @@ export function showNoDiagnosticsMessage(isErrorsOnly: boolean = false): void {
  * アクティブなエディタがない場合のメッセージを表示
  */
 export function showNoEditorMessage(): void {
-  showTimedMessage('アクティブなエディタが見つかりません。', 'info');
+  showTimedMessage(
+    vscode.l10n.t('アクティブなエディタが見つかりません。'),
+    'info'
+  );
 }
 
 --END--
