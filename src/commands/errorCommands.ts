@@ -16,45 +16,17 @@ import {
   showNoDiagnosticsMessage,
   showNoEditorMessage,
 } from '../services/clipboardService';
-import { useGrouping } from '../utils/config';
+import { useGrouping, errorsOnly } from '../utils/config';
 
 /**
- * すべての診断情報をコピーするコマンドハンドラー
+ * 診断情報をコピーするコマンドハンドラー
+ * 設定に基づいてグループ化やエラーのみのフィルタリングを行う
+ * 以前の4つのコマンドを1つに統合
  */
-export async function copyAllDiagnosticsHandler(): Promise<void> {
-  await copyDiagnosticsWithOptions({ errorsOnly: false });
-}
-
-/**
- * エラーのみをコピーするコマンドハンドラー
- */
-export async function copyErrorsOnlyHandler(): Promise<void> {
-  await copyDiagnosticsWithOptions({ errorsOnly: true });
-}
-
-/**
- * グループ化したすべての診断情報をコピーするコマンドハンドラー
- */
-export async function copyGroupedDiagnosticsHandler(): Promise<void> {
-  await copyDiagnosticsWithOptions({ errorsOnly: false, forceGrouped: true });
-}
-
-/**
- * グループ化したエラーのみをコピーするコマンドハンドラー
- */
-export async function copyGroupedErrorsOnlyHandler(): Promise<void> {
-  await copyDiagnosticsWithOptions({ errorsOnly: true, forceGrouped: true });
-}
-
-/**
- * オプションを指定して診断情報をコピー
- */
-async function copyDiagnosticsWithOptions(options: {
-  errorsOnly: boolean;
-  forceGrouped?: boolean;
-}): Promise<void> {
-  // 設定からグループ化の設定を取得（または強制的にグループ化）
-  const grouped = options.forceGrouped || useGrouping();
+export async function copyDiagnosticsHandler(): Promise<void> {
+  // 設定からオプションを取得
+  const grouped = useGrouping();
+  const filterErrors = errorsOnly();
 
   // 現在のファイルの診断情報を取得
   const diagnostics = getCurrentFileDiagnostics();
@@ -65,10 +37,12 @@ async function copyDiagnosticsWithOptions(options: {
   }
 
   // 診断情報をフィルタリング
-  const filteredDiagnostics = filterDiagnostics(diagnostics, options);
+  const filteredDiagnostics = filterDiagnostics(diagnostics, {
+    errorsOnly: filterErrors,
+  });
 
   if (filteredDiagnostics.length === 0) {
-    showNoDiagnosticsMessage(options.errorsOnly);
+    showNoDiagnosticsMessage(filterErrors);
     return;
   }
 
@@ -93,6 +67,13 @@ async function copyDiagnosticsWithOptions(options: {
   const success = await copyToClipboard(formattedText);
 
   if (success) {
-    showCopySuccessMessage(options.errorsOnly, grouped);
+    showCopySuccessMessage(filterErrors, grouped);
   }
 }
+
+// 以下の関数は不要になったため削除
+// copyAllDiagnosticsHandler
+// copyErrorsOnlyHandler
+// copyGroupedDiagnosticsHandler
+// copyGroupedErrorsOnlyHandler
+// copyDiagnosticsWithOptions

@@ -34,7 +34,16 @@ export function includeFileName(): boolean {
 
 /**
  * エラーをグループ化するかどうかを取得
+ * デフォルトでグループ化するように変更
  */
 export function useGrouping(): boolean {
-  return getConfiguration().get<boolean>('useGrouping') ?? false;
+  return getConfiguration().get<boolean>('useGrouping') ?? true;
+}
+
+/**
+ * エラーのみをコピーするかどうかを取得
+ * 新しく追加された設定
+ */
+export function errorsOnly(): boolean {
+  return getConfiguration().get<boolean>('errorsOnly') ?? false;
 }
