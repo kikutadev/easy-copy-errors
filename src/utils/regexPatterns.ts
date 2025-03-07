@@ -81,7 +81,7 @@ export const VitestPatterns = {
    * 例: FAIL src/recorder/recorder/ActionRecorder.test.ts > ActionRecorder > 基本機能
    */
   filePathWithTestName:
-    /FAIL\s+([a-zA-Z0-9_\-/.]+\.(spec|test)\.[jt]sx?)\s+>\s+([^>][^\n]+?)(?=\s+\d+ms|\s*$)/,
+    /FAIL\s+([a-zA-Z0-9_\-/.]+\.(spec|test)\.[jt]sx?)\s+>\s+([^>][^\n]+?)(?=\s+\d+ms|\s*$)/g,
 
   /**
    * 失敗したテスト検出パターン群
@@ -115,7 +115,7 @@ export const VitestPatterns = {
    * 例: FAIL src/recorder/recorder/handlers/NavigationHandler.test.ts > ActionRecorder > 基本機能
    */
   filePathAndTestName:
-    /FAIL\s+([a-zA-Z0-9_\-/.]+\.(spec|test)\.[jt]sx?)\s+>\s+(.+?)(?=\n)/i,
+    /FAIL\s+([a-zA-Z0-9_\-/.]+\.(spec|test)\.[jt]sx?)\s+>\s+(.+?)(?=\n)/gi,
 
   /**
    * エラーや失敗を示す行の抽出パターン
