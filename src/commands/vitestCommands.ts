@@ -73,7 +73,7 @@ export async function copySelectedVitestResultsHandler(): Promise<void> {
 /**
  * シンプルな全テスト結果コピーハンドラー（以前の実装と同じ）
  */
-export async function copyAllVitestResultsHandler(): Promise<void> {
+export async function copyVitestResultsHandler(): Promise<void> {
   vscode.window.showInformationMessage(
     'Vitestテスト結果をキャプチャしています...'
   );

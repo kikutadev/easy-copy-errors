@@ -1,9 +1,8 @@
 // src/extension.ts
 import * as vscode from 'vscode';
 import { copyDiagnosticsHandler } from './commands/errorCommands';
-import { copyVitestResultsHandler } from './commands/terminalCommands';
 import {
-  copyAllVitestResultsHandler,
+  copyVitestResultsHandler,
   copySelectedVitestResultsHandler,
 } from './commands/vitestCommands';
 
@@ -16,7 +15,6 @@ export function activate(context: vscode.ExtensionContext) {
     copyDiagnosticsHandler
   );
 
-  // Vitestコマンド（変更なし）
   const vitestResultsCommand = vscode.commands.registerCommand(
     'easy-copy-errors.copyVitestResults',
     copyVitestResultsHandler
@@ -27,16 +25,11 @@ export function activate(context: vscode.ExtensionContext) {
     copySelectedVitestResultsHandler
   );
 
-  const allVitestResultsCommand = vscode.commands.registerCommand(
-    'easy-copy-errors.copyAllVitestResults',
-    copyAllVitestResultsHandler
-  );
 
   context.subscriptions.push(
     diagnosticsCommand,
     vitestResultsCommand,
     selectVitestResultsCommand,
-    allVitestResultsCommand
   );
 }
 
