@@ -201,7 +201,9 @@ export function extractTestsMethod2(text: string): FailedTest[] {
     }
 
     // ファイルパスとテスト名を抽出
-    const headerMatch = section.match(VitestPatterns.filePathWithTestName);
+    const headerMatch = section.match(
+      VitestPatterns.filePathWithTestNameNonGlobal
+    );
     if (headerMatch) {
       const filePath = headerMatch[1];
       const testName = headerMatch[3].trim();

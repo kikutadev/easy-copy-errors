@@ -1,48 +1,69 @@
+# READMEの更新
+
+以下に英語と日本語のREADMEファイルの更新版を提供します。最新のv0.0.2の機能を反映した内容になっています。
+
+## README.md（英語版）
+
+```markdown
 # 📋 Easy Copy Errors
 
 [English](README.md) | [日本語](README.ja.md)
 
-A VS Code extension that makes it easy to copy error messages from the current file. Optimized for creating prompts for generative AI tools (like ChatGPT, GitHub Copilot, etc.)!
+A VS Code extension for easily copying error messages from your current file or terminal output.
+Created specifically to help with generating prompts for AI tools (ChatGPT, GitHub Copilot, etc.).
 
 ![](how-to-use.gif)
+
 ## 🌟 Features
 
-- 🔴 Copy all diagnostic information (errors, warnings, etc.) from the current file
-- 🚨 Copy only errors (excluding warnings, etc.)
-- ✨ Provide error information in a format optimized for AI tools
+- 🔴 Copy all diagnostics (errors, warnings, etc.) from the current file
+- 🚨 Copy errors only (skip warnings, etc.)
 - 🔧 Customize the format of copied error messages
+- 📊 Group similar errors for better readability
+- 🧪 Extract and copy Vitest test results with readable formatting
+- 🌐 Internationalization support
 
 ## 🚀 Usage
 
-- Copy all diagnostic information: `Ctrl+Alt+E` (`Cmd+Option+E` on Mac)
-- Copy only errors: `Ctrl+Alt+A` (`Cmd+Option+A` on Mac)
+### Diagnostic Information
 
-You can also run these commands from the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`):
-- "Copy All Errors in Current File"
-- "Copy Only Errors in Current File"
+Open the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`) and run:
+- `Errors: Copy Diagnostics`
 
-## ⚙️ Configuration
+This single command can handle all previous functionality, with behavior controlled by settings.
 
-This extension offers the following configuration options:
+### Vitest Test Results
 
-- `easyCopyErrors.includeFileName`: Include the file name in the copied error message (default: `true`)
-- `easyCopyErrors.format`: Format of the error message (default: `"[${severity}] Line ${line}, Column ${column}: ${message}"`)
+When working with Vitest test output:
+1. Run your Vitest tests in the terminal
+2. Open the Command Palette and run `Vitest: Copy Vitest Test Results`
+3. Select the test file and specific tests to copy (all tests are selected by default)
 
-### 📝 Available placeholders for formatting
+## ⚙️ Settings
 
-- `${severity}`: Severity of the diagnostic (Error, Warning, Info, Hint)
+This extension provides the following configuration options:
+
+- `easyCopyErrors.useNewFormat`: Use the new AI-friendly format (default: `true`)
+- `easyCopyErrors.includeFileName`: Include file name in error messages (default: `true`)
+- `easyCopyErrors.format`: Custom format for error messages (default: `"[${severity}] Line ${line}, Column ${column}: ${message}"`)
+- `easyCopyErrors.useGrouping`: Group similar errors together (default: `true`)
+- `easyCopyErrors.errorsOnly`: Copy only errors, excluding warnings and information (default: `false`)
+
+### 📝 Available Format Placeholders
+
+- `${severity}`: Diagnostic severity (Error, Warning, Info, Hint)
 - `${line}`: Line number where the diagnostic appears
 - `${column}`: Column number where the diagnostic appears
 - `${message}`: Diagnostic message
 - `${file}`: File name (only included if `includeFileName` is `true`)
-- `${lineContent}`: Content of the code line where the error occurs
-- `${relativePath}`: Relative path from the workspace
+- `${lineContent}`: Content of the line where the error occurs
+- `${relativePath}`: Path relative to workspace
 
-## 🤖 Integration with Generative AI
+## 🤖 Integration with AI Tools
 
-This extension is extremely useful when communicating error details to generative AI tools like ChatGPT or GitHub Copilot, as it copies error information in a structured format.
+This extension structures error information in a format that's easy for AI tools like ChatGPT and GitHub Copilot to understand.
 
-### ✅ Example of copied format
+### ✅ Example Format
 
 ```
 file: src/components/Button.tsx
@@ -50,34 +71,30 @@ Line 42:      return {label}
 Property 'handlClick' does not exist. Did you mean 'handleClick'? ts(2551)
 ```
 
-Using this format, AI can accurately understand the error location and context, enabling it to suggest more precise solutions.
-
-### 💡 Example question for AI
+### 💡 Example AI Prompt
 
 ```
-Please help me solve the following TypeScript error:
+Please help me fix the following TypeScript error:
 
 file: src/components/Button.tsx
 Line 42:      return {label}
 Property 'handlClick' does not exist. Did you mean 'handleClick'? ts(2551)
 ```
 
-## 📚 Motivation for using this extension
+## 📚 Motivation
 
-### 🧠 Make generative AI smarter
+### 🧠 Making AI Smarter
 
-The performance of generative AI heavily depends on the context provided. By including the exact file, line number, and code content where the error occurs, AI can understand the problem more accurately and suggest better solutions.
+AI tools perform better with accurate context. By including the exact file, line number, and code content, AI can better understand and solve your problems.
 
-### ⏱️ Save development time
+### ⏱️ Saving Development Time
 
-Save time manually copying and pasting error details. With just one keyboard shortcut, all necessary information is copied to your clipboard.
+Save time manually copying error details. One shortcut copies all the information you need to your clipboard.
 
 ## 📜 License
 
-Released under the MIT license. For details, see the [LICENSE](LICENSE.md) file.
+Published under the MIT License. See [LICENSE](LICENSE.md) for details.
 
 ## 🔄 Version History
 
-### Version 0.0.1
-- 🎉 Initial release
-- 🔄 Implementation of basic features
+See [CHANGELOG.md](CHANGELOG.md)

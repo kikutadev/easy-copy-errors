@@ -79,9 +79,16 @@ export const VitestPatterns = {
   /**
    * テストファイルパスとテスト名の組み合わせパターン
    * 例: FAIL src/recorder/recorder/ActionRecorder.test.ts > ActionRecorder > 基本機能
+   * matchAllメソッドで使用するためにグローバルフラグ付き
    */
   filePathWithTestName:
     /FAIL\s+([a-zA-Z0-9_\-/.]+\.(spec|test)\.[jt]sx?)\s+>\s+([^>][^\n]+?)(?=\s+\d+ms|\s*$)/g,
+
+  /**
+   * 同じパターンのnon-globalバージョン（match()メソッドで使用）
+   */
+  filePathWithTestNameNonGlobal:
+    /FAIL\s+([a-zA-Z0-9_\-/.]+\.(spec|test)\.[jt]sx?)\s+>\s+([^>][^\n]+?)(?=\s+\d+ms|\s*$)/,
 
   /**
    * 失敗したテスト検出パターン群
@@ -113,9 +120,10 @@ export const VitestPatterns = {
   /**
    * テスト名とファイルパスの抽出パターン
    * 例: FAIL src/recorder/recorder/handlers/NavigationHandler.test.ts > ActionRecorder > 基本機能
+   * match()メソッドでキャプチャグループを取得するため、グローバルフラグなし
    */
   filePathAndTestName:
-    /FAIL\s+([a-zA-Z0-9_\-/.]+\.(spec|test)\.[jt]sx?)\s+>\s+(.+?)(?=\n)/gi,
+    /FAIL\s+([a-zA-Z0-9_\-/.]+\.(spec|test)\.[jt]sx?)\s+>\s+(.+?)(?=\n)/i,
 
   /**
    * エラーや失敗を示す行の抽出パターン

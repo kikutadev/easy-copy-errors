@@ -1,3 +1,6 @@
+The following text is a code file. The structure of the text are sections that begin with ----, followed by a single line containing the file path and file name, followed by a variable amount of lines containing the file contents. The text representing the file ends when the symbols --END-- are encountered.
+----
+package.json
 {
   "name": "easy-copy-errors",
   "publisher": "kikuta",
@@ -47,18 +50,6 @@
     "typescript": "^5.7.3"
   },
   "contributes": {
-    "keybindings": [
-      {
-        "command": "easy-copy-errors.copyErrors",
-        "key": "ctrl+alt+e",
-        "mac": "cmd+opt+e"
-      },
-      {
-        "command": "easy-copy-errors.copyVitestResults",
-        "key": "ctrl+alt+t",
-        "mac": "cmd+opt+t"
-      }
-    ],
     "configuration": {
       "title": "Easy Copy Errors",
       "properties": {
@@ -121,3 +112,5 @@
     "@vscode/l10n": "^0.0.18"
   }
 }
+
+--END--

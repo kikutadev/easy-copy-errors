@@ -45,9 +45,9 @@ export function showTimedMessage(
   // タイムアウト後にメッセージを閉じる
   setTimeout(() => {
     // VSCodeの内部APIを使用してメッセージを閉じる
-    // @ts-ignore: VSCodeの内部APIへのアクセス
+
     if (messagePromise && messagePromise.cancel) {
-      // @ts-ignore: VSCodeの内部APIへのアクセス
+
       messagePromise.cancel();
     }
   }, timeout);

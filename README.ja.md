@@ -1,7 +1,9 @@
+
 # 📋 Easy Copy Errors
+
 [English](README.md) | [日本語](README.ja.md)
 
-現在のファイルからエラーメッセージを簡単にコピーするためのVS Code拡張機能です。
+現在のファイルからエラーメッセージやテスト結果を簡単にコピーするためのVS Code拡張機能です。
 特に生成AI（ChatGPT、GitHub Copilotなど）へのプロンプト作成のために作りました。
 
 ![](how-to-use.gif)
@@ -11,22 +13,35 @@
 - 🔴 現在のファイル内のすべての診断情報（エラー、警告など）をコピー
 - 🚨 エラーのみをコピー（警告などは除外）
 - 🔧 コピーされるエラーメッセージのフォーマットをカスタマイズ可能
+- 📊 同様のエラーをグループ化して読みやすく表示
+- 🧪 Vitestテスト結果を抽出して読みやすい形式でコピー
+- 🌐 国際化対応
 
 ## 🚀 使い方
 
-- すべての診断情報をコピー: `Ctrl+alt+E`（Macの場合は`Cmd+option+E`）
-- エラーのみをコピー: `Ctrl+alt+A`（Macの場合は`Cmd+option+A`）
+### 診断情報
 
-コマンドパレット（`Ctrl+Shift+P`または`Cmd+Shift+P`）からも実行できます：
-- 「現在のファイル内のすべてのエラーをコピー」
-- 「現在のファイル内のエラーのみをコピー」
+コマンドパレット（`Ctrl+Shift+P`または`Cmd+Shift+P`）から実行：
+- `Errors: Copy Diagnostics`
+
+このコマンド一つで、以前のすべての機能を設定に基づいて実行できます。
+
+### Vitestテスト結果
+
+Vitestテスト出力を扱う場合：
+1. ターミナルでVitestテストを実行
+2. コマンドパレットを開いて `Vitest: Copy Vitest Test Results` を実行
+3. テストファイルと特定のテストを選択（デフォルトですべてのテストが選択されています）
 
 ## ⚙️ 設定
 
 この拡張機能では以下の設定オプションが利用できます：
 
+- `easyCopyErrors.useNewFormat`: AI向けの新しいフォーマットを使用する（デフォルト: `true`）
 - `easyCopyErrors.includeFileName`: コピーされるエラーメッセージにファイル名を含める（デフォルト: `true`）
 - `easyCopyErrors.format`: エラーメッセージのフォーマット（デフォルト: `"[${severity}] Line ${line}, Column ${column}: ${message}"`）
+- `easyCopyErrors.useGrouping`: 類似したエラーをグループ化する（デフォルト: `true`）
+- `easyCopyErrors.errorsOnly`: エラーのみをコピーし、警告や情報を除外する（デフォルト: `false`）
 
 ### 📝 フォーマットで使用できるプレースホルダー
 
@@ -78,8 +93,4 @@ MITライセンスで公開しています。詳細は[LICENSE](LICENSE.md)フ�
 
 ## 🔄 バージョン履歴
 
-### バージョン 0.0.1
-- 🎉 初回リリース
-- 🔄 基本機能の実装
-
----
+詳細は[CHANGELOG.md](CHANGELOG.md)をご覧ください。
