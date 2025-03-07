@@ -71,8 +71,20 @@ export function extractCodeSnippet(text: string): string {
  * @param text 解析対象のテキスト
  * @returns 抽出された失敗テスト情報の配列
  */
+/**
+ * Vitestのテスト結果から失敗したテストを抽出する（方法1）
+ */
 export function extractTestsMethod1(text: string): FailedTest[] {
   const failedTests: FailedTest[] = [];
+
+  // ファイルパスをテスト出力から優先的に抽出
+  const filePathMatch = text.match(VitestPatterns.testFileLinePattern);
+
+  // ×マークを使ってテスト名を抽出
+  const testNameMatch = text.match(VitestPatterns.failedTestNamePattern);
+
+  // →を使ってエラーメッセージを抽出
+  const errorMessageMatch = text.match(VitestPatterns.arrowErrorMessagePattern);
 
   // ファイルパスとテスト名を一度に抽出するパターンを試す
   const fileTestMatches = Array.from(

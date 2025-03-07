@@ -16,7 +16,7 @@ export async function copyToClipboard(text: string): Promise<boolean> {
 
 /**
  * タイムアウト付きの通知メッセージを表示する
- * 指定した時間（ミリ秒）後に自動的に通知を閉じる
+ * VSCodeのプログレスAPIを使用して、指定した時間後に自動的に閉じる通知を表示
  * @param message 表示するメッセージ
  * @param type メッセージの種類 ('info', 'warning', 'error')
  * @param timeout 自動的に閉じるまでの時間（ミリ秒）
@@ -24,51 +24,43 @@ export async function copyToClipboard(text: string): Promise<boolean> {
 export function showTimedMessage(
   message: string,
   type: 'info' | 'warning' | 'error' = 'info',
-  timeout: number = 5000
+  timeout: number = 3000
 ): void {
-  let messagePromise: Thenable<any>;
-
-  // メッセージの種類に応じた表示メソッドを使用
-  switch (type) {
-    case 'warning':
-      messagePromise = vscode.window.showWarningMessage(message);
-      break;
-    case 'error':
-      messagePromise = vscode.window.showErrorMessage(message);
-      break;
-    case 'info':
-    default:
-      messagePromise = vscode.window.showInformationMessage(message);
-      break;
+  // アイコンをメッセージタイプに基づいて設定
+  let icon = '$(info)';
+  if (type === 'warning') {
+    icon = '$(warning)';
+  } else if (type === 'error') {
+    icon = '$(error)';
   }
 
-  // タイムアウト後にメッセージを閉じる
-  setTimeout(() => {
-    // VSCodeの内部APIを使用してメッセージを閉じる
-
-    if (messagePromise && messagePromise.cancel) {
-
-      messagePromise.cancel();
+  // withProgressを使用して一時的な通知を表示
+  vscode.window.withProgress(
+    {
+      location: vscode.ProgressLocation.Notification,
+      title: `${icon} ${message}`,
+      cancellable: false,
+    },
+    async () => {
+      // タイムアウトまで待機
+      await new Promise((resolve) => setTimeout(resolve, timeout));
+      // タイムアウト後に自動的に閉じる（この関数が完了すると通知が閉じる）
+      return;
     }
-  }, timeout);
+  );
+
+  // タイプに応じてステータスバーにも表示
+  // const statusBarMessage = vscode.window.setStatusBarMessage(message, timeout);
 }
 
 /**
  * クリップボードへのコピー成功時のメッセージを表示
  */
-export function showCopySuccessMessage(
-  isErrorsOnly: boolean = false,
-  isGrouped: boolean = false
-): void {
+export function showCopySuccessMessage(isErrorsOnly: boolean = false): void {
   let message = isErrorsOnly ? 'エラーのみ' : 'すべての診断情報';
-
-  if (isGrouped) {
-    message += '（グループ化）';
-  }
 
   message += 'をクリップボードにコピーしました！';
 
-  -vscode.window.showInformationMessage(message);
   showTimedMessage(message, 'info');
 }
 

@@ -14,14 +14,14 @@ export const VitestPatterns = {
   /**
    * テスト名抽出パターン
    * 例: NavigationHandler > handleBeforeUnload > ビーコンを正しく送信する
+   * 日本語を含むテスト名も適切に抽出できるように改善
    */
-  testName: /^([^\n]+)/,
-
+  testName: /(?:×|✗|✘)\s+([^\n]+?)(?=\s+\d+ms|\s*$)/,
   /**
    * ファイルパス抽出パターン
-   * 例: src/recorder/recorder/handlers/NavigationHandler.test.ts
+   * ❯の後のファイルパスを優先的に抽出するように改善
    */
-  filePath: /([a-zA-Z0-9_\-/.]+\.(spec|test)\.[jt]sx?)/i,
+  filePath: /❯\s+([a-zA-Z0-9_\-/.]+\.(spec|test)\.[jt]sx?)/i,
 
   /**
    * エラーメッセージ抽出パターン
@@ -36,6 +36,23 @@ export const VitestPatterns = {
    */
   lineNumber: /❯\s+[\w/\.\-]+:(\d+:\d+)/,
 
+  /**
+   * ❯行からファイルパスを抽出するパターン
+   * 例: ❯ src/recorder/player/playSimulators.test.ts
+   */
+  testFileLinePattern: /❯\s+([a-zA-Z0-9_\-/.]+\.(spec|test)\.[jt]sx?)/i,
+
+  /**
+   * ×マークからテスト名を抽出するパターン
+   * 例: × シミュレーション関数のテスト > simulateClick > 要素が見つかった場合にクリックを実行すること 9ms
+   */
+  failedTestNamePattern: /(?:×|✗|✘)\s+([^\n]+?)(?=\s+\d+ms|\s*$)/,
+
+  /**
+   * 矢印エラーメッセージパターン
+   * 例: → expected "spy" to be called with arguments: [ '#test-button' ]
+   */
+  arrowErrorMessagePattern: /→\s+(.+?)(?=\n\n|\n\s*Received:|\n\s*$)/s,
   /**
    * コードスニペット抽出パターン群
    */
