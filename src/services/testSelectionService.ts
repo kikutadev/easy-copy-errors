@@ -33,8 +33,10 @@ export async function showTestFileSelectionUI(
   // QuickPickアイテムに変換
   const items: TestFileQuickPickItem[] = testGroups.map((group) => ({
     label: group.displayName,
-    description: vscode.l10n.t('失敗テスト: {failedTestsLength}件', {
-      failedTestsLength: group.failedTests.length,
+    description: vscode.l10n.t({
+      message: '失敗テスト: {0}件',
+      args: [group.failedTests.length],
+      comment: ['failedTestsLength'],
     }),
     detail: group.filePath,
     fileGroup: group,
@@ -68,8 +70,10 @@ export async function showIndividualTestSelectionUI(
   // 「全てのテストを選択」オプションを追加
   const allTestsOption: vscode.QuickPickItem = {
     label: vscode.l10n.t('全てのテストを選択'),
-    description: vscode.l10n.t('({failedTestsLength}件)', {
-      failedTestsLength: fileGroup.failedTests.length,
+    description: vscode.l10n.t({
+      message: '({0}件)',
+      args: [fileGroup.failedTests.length],
+      comment: ['failedTestsLength'],
     }),
     kind: vscode.QuickPickItemKind.Separator,
   };

@@ -61,15 +61,18 @@ export function parseVitestOutput(text: string): FailedTest[] {
 
   // デバッグ情報
   console.log(
-    vscode.l10n.t('抽出されたテスト数: {uniqueTestsLength}', {
-      uniqueTestsLength: uniqueTests.length,
+    vscode.l10n.t({
+      message: '抽出されたテスト数: {0}',
+      args: [uniqueTests.length],
+      comment: ['uniqueTestsLength'],
     })
   );
   uniqueTests.forEach((test) => {
     console.log(
-      vscode.l10n.t('ファイル: {filePath}, テスト: {testName}', {
-        filePath: test.filePath,
-        testName: test.testName,
+      vscode.l10n.t({
+        message: 'ファイル: {0}, テスト: {1}',
+        args: [test.filePath, test.testName],
+        comment: ['filePath', 'testName'],
       })
     );
   });

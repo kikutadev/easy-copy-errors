@@ -63,7 +63,11 @@ export async function copySelectedVitestResultsHandler(): Promise<void> {
 
   if (success) {
     vscode.window.showInformationMessage(
-      vscode.l10n.t(`{selectedTests.length}件の失敗したテストをコピーしました`)
+      vscode.l10n.t({
+        message: '{0}件の失敗したテストをコピーしました',
+        args: [selectedTests.length],
+        comment: ['selectedTestsLength'],
+      })
     );
   } else {
     vscode.window.showErrorMessage(

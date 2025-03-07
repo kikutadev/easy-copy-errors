@@ -60,13 +60,11 @@ export function showTimedMessage(
  * クリップボードへのコピー成功時のメッセージを表示
  */
 export function showCopySuccessMessage(isErrorsOnly: boolean = false): void {
-  let message = isErrorsOnly
-    ? vscode.l10n.t('エラーのみ')
-    : vscode.l10n.t('すべての診断情報');
-
   showTimedMessage(
-    vscode.l10n.t('{message}をクリップボードにコピーしました！', {
-      message: message,
+    vscode.l10n.t({
+      message: '{0}をクリップボードにコピーしました！',
+      args: [isErrorsOnly ? 'エラー' : '診断情報'],
+      comment: ['isErrorsOnly'],
     }),
     'info'
   );
