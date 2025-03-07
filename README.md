@@ -1,10 +1,4 @@
-# READMEの更新
 
-以下に英語と日本語のREADMEファイルの更新版を提供します。最新のv0.0.2の機能を反映した内容になっています。
-
-## README.md（英語版）
-
-```markdown
 # 📋 Easy Copy Errors
 
 [English](README.md) | [日本語](README.ja.md)
@@ -12,32 +6,122 @@
 A VS Code extension for easily copying error messages from your current file or terminal output.
 Created specifically to help with generating prompts for AI tools (ChatGPT, GitHub Copilot, etc.).
 
-![](how-to-use.gif)
-
 ## 🌟 Features
 
+### Diagnostic Information
 - 🔴 Copy all diagnostics (errors, warnings, etc.) from the current file
 - 🚨 Copy errors only (skip warnings, etc.)
-- 🔧 Customize the format of copied error messages
 - 📊 Group similar errors for better readability
-- 🧪 Extract and copy Vitest test results with readable formatting
-- 🌐 Internationalization support
+- 🔧 Customize the format of copied error messages
+
+### Vitest Test Results
+- 🧪 Extract and copy failed Vitest test results with readable formatting
+- 📋 Select test files and specific tests to copy
+- 📝 Include code snippets, expected/received values, and error messages
+- 🔍 Support for various Vitest output formats
 
 ## 🚀 Usage
 
-### Diagnostic Information
+### Error
 
-Open the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`) and run:
-- `Errors: Copy Diagnostics`
+#### How to Use
+1. Open the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`) and run `Errors: Copy Diagnostics`
+2. Or use the keyboard shortcut: `Ctrl+Alt+E` (`Cmd+Option+E` on Mac)
+3. The diagnostics from your current file will be copied to the clipboard
 
-This single command can handle all previous functionality, with behavior controlled by settings.
+#### Error Copy Settings
+- `easyCopyErrors.useNewFormat`: Use the new AI-friendly format (default: `true`)
+- `easyCopyErrors.includeFileName`: Include file name in error messages (default: `true`)
+- `easyCopyErrors.format`: Custom format for error messages (default: `"[${severity}] Line ${line}, Column ${column}: ${message}"`)
+- `easyCopyErrors.useGrouping`: Group similar errors together (default: `true`)
+- `easyCopyErrors.errorsOnly`: Copy only errors, excluding warnings (default: `false`)
 
-### Vitest Test Results
+#### Format Example
+```
+file: src/components/Button.tsx
+Line 42:      return {label}
+Property 'handlClick' does not exist. Did you mean 'handleClick'? ts(2551)
+```
 
-When working with Vitest test output:
+#### AI Prompt Example
+```
+Please help me fix the following TypeScript error:
+
+file: src/components/Button.tsx
+Line 42:      return {label}
+Property 'handlClick' does not exist. Did you mean 'handleClick'? ts(2551)
+```
+
+### Vitest
+
+#### How to Use
 1. Run your Vitest tests in the terminal
-2. Open the Command Palette and run `Vitest: Copy Vitest Test Results`
-3. Select the test file and specific tests to copy (all tests are selected by default)
+2. Open the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`) and run `Vitest: Copy Vitest Test Results`
+3. Or use the keyboard shortcut: `Ctrl+Alt+T` (`Cmd+Option+T` on Mac)
+4. Select the test file and specific tests to copy (all tests are selected by default)
+5. The selected test results will be copied to your clipboard
+
+#### Vitest Output Format Example
+```
+file: src/recorder/player/playSimulators.test.ts
+
+expected:
+expected "spy" to be called with arguments: [ '#test-button' ]
+
+received:
+Received:
+
+  1st spy call:
+
+  [
+-   "#test-button",
++   {
++     "selector": "#test-button",
++   },
+  ]
+
+
+Number of calls: 1
+
+code snippet:
+[
+-   "#test-button",
++   {
++     "selector": "#test-button",
++   },
+  ]
+```
+
+#### AI Prompt Example
+```
+Please help me fix the following Vitest test failure:
+
+file: src/recorder/player/playSimulators.test.ts
+
+expected:
+expected "spy" to be called with arguments: [ '#test-button' ]
+
+received:
+Received:
+
+  1st spy call:
+
+  [
+-   "#test-button",
++   {
++     "selector": "#test-button",
++   },
+  ]
+
+The test is expecting a string to be passed to the spy, but it seems we need to pass an object with a selector property instead. How should I fix this?
+```
+
+## ⌨️ Keyboard Shortcuts
+
+| Feature | Windows/Linux | macOS |
+|---------|---------------|-------|
+| Copy Diagnostics | `Ctrl+Alt+E` | `Cmd+Option+E` |
+| Copy Vitest Test Results | `Ctrl+Alt+T` | `Cmd+Option+T` |
 
 ## ⚙️ Settings
 
@@ -62,24 +146,6 @@ This extension provides the following configuration options:
 ## 🤖 Integration with AI Tools
 
 This extension structures error information in a format that's easy for AI tools like ChatGPT and GitHub Copilot to understand.
-
-### ✅ Example Format
-
-```
-file: src/components/Button.tsx
-Line 42:      return {label}
-Property 'handlClick' does not exist. Did you mean 'handleClick'? ts(2551)
-```
-
-### 💡 Example AI Prompt
-
-```
-Please help me fix the following TypeScript error:
-
-file: src/components/Button.tsx
-Line 42:      return {label}
-Property 'handlClick' does not exist. Did you mean 'handleClick'? ts(2551)
-```
 
 ## 📚 Motivation
 
