@@ -18,6 +18,8 @@ interface TestQuickPickItem extends vscode.QuickPickItem {
 
 /**
  * テストファイル選択UIを表示
+ * テスト結果をファイル単位でグループ化し、選択UIを提供する
+ * @param testGroups ファイル別にグループ化されたテスト結果
  * @returns 選択されたテストファイルグループ、またはキャンセルされた場合はundefined
  */
 export async function showTestFileSelectionUI(
@@ -48,7 +50,10 @@ export async function showTestFileSelectionUI(
 
 /**
  * 個別テスト選択UIを表示
- * @returns 選択されたテスト、またはキャンセルされた場合はundefined
+ * 指定されたファイルグループ内のテストを選択するUIを提供する
+ * 複数選択可能で、「全てのテストを選択」オプションも提供
+ * @param fileGroup テストファイルグループ
+ * @returns 選択されたテスト配列、またはキャンセルされた場合はundefined
  */
 export async function showIndividualTestSelectionUI(
   fileGroup: TestFileGroup
@@ -68,7 +73,7 @@ export async function showIndividualTestSelectionUI(
   // 個別のテストアイテム
   const testItems: TestQuickPickItem[] = fileGroup.failedTests.map((test) => ({
     label: test.testName,
-    description: '',
+    description: test.lineNumber ? `行: ${test.lineNumber}` : '',
     detail: test.errorMessage,
     test: test,
   }));

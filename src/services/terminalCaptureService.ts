@@ -1,7 +1,10 @@
+// src/services/terminalCaptureService.ts
 import * as vscode from 'vscode';
 
 /**
  * ターミナルの出力テキストをキャプチャする
+ * ターミナルのテキストを選択してクリップボードに一時的にコピーし、
+ * 元のクリップボード内容を復元する
  * @returns キャプチャしたテキスト、または失敗した場合はnull
  */
 export async function captureTerminalText(): Promise<string | null> {
