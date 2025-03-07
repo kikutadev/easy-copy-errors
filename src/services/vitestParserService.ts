@@ -1,3 +1,4 @@
+// src/services/vitestParserService.ts
 /**
  * 失敗したVitestテストの情報
  */
@@ -12,80 +13,87 @@ export interface FailedTest {
 
 /**
  * Vitestのテスト出力から失敗したテストを抽出する
- * @param text ターミナル出力テキスト
- * @returns 失敗したテストの配列
  */
 export function parseVitestOutput(text: string): FailedTest[] {
   const failedTests: FailedTest[] = [];
 
-  // FAILセクションを検出する正規表現
-  // Vitestの実際の出力形式に合わせて調整する必要あり
-  const failTestPattern =
-    /(?:FAIL|✗|× )(.+?\.[a-z]+).*?\n(.*?)\n([\s\S]+?)(?=(?:FAIL|✓|√|✗|× |PASS|\s*$))/g;
+  // テストファイルのセクションを検出
+  const testSections = text.split(/❯\s+[^\s]+\s+\(\d+\s+tests/g);
 
-  let match;
-  while ((match = failTestPattern.exec(text)) !== null) {
-    const section = match[0];
-    const filePath = match[1].trim();
-    const testName = match[2].trim();
-    const errorDetails = match[3];
+  for (let i = 1; i < testSections.length; i++) {
+    const section = testSections[i];
+    const filePathMatch = text.match(
+      new RegExp(
+        `❯\\s+([^\\s]+)\\s+\\(\\d+\\s+tests.*?${section
+          .substring(0, 30)
+          .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`,
+        's'
+      )
+    );
 
-    const errorMessage = extractErrorMessage(errorDetails);
-    const codeSnippet = extractCodeSnippet(errorDetails);
-    const { expected, received } = extractExpectedReceived(errorDetails);
+    if (!filePathMatch) continue;
+    const filePath = filePathMatch[1];
 
-    failedTests.push({
-      filePath,
-      testName,
-      errorMessage,
-      codeSnippet,
-      expected,
-      received,
-    });
+    // 失敗したテスト行を検出
+    const failedTestPattern =
+      /×\s+(.+?)\s+\d+ms\n\s+→\s+(.+?)(?=\n\s+[×✓]|\n\s*$)/gs;
+    let testMatch;
+
+    while ((testMatch = failedTestPattern.exec(section)) !== null) {
+      const testName = testMatch[1].trim();
+      const errorMessage = testMatch[2].trim();
+
+      // テストの詳細テキストを抽出
+      const startIdx = testMatch.index + testMatch[0].length;
+      const nextTestMatch = failedTestPattern.exec(section);
+      failedTestPattern.lastIndex = testMatch.index + 1; // 検索位置をリセット
+
+      const endIdx = nextTestMatch ? nextTestMatch.index : section.length;
+      const detailText = section.substring(startIdx, endIdx);
+
+      // 期待値と実際の値を抽出
+      const expected = extractExpected(detailText);
+      const received = extractReceived(detailText);
+      const codeSnippet = extractCodeSnippet(detailText);
+
+      failedTests.push({
+        filePath,
+        testName,
+        errorMessage,
+        codeSnippet,
+        expected,
+        received,
+      });
+    }
   }
 
   return failedTests;
 }
 
 /**
- * エラーメッセージを抽出する
+ * 期待値を抽出
  */
-function extractErrorMessage(text: string): string {
-  // Vitestの実際の出力形式に合わせて調整
-  const errorPattern = /Error:(.+?)(?=\n\s*\n|\n\s*at|\n\s*Expected)/s;
-  const match = errorPattern.exec(text);
-  return match ? match[1].trim() : 'Unknown error';
-}
-
-/**
- * コードスニペットを抽出する
- */
-function extractCodeSnippet(text: string): string {
-  // Vitestの実際の出力形式に合わせて調整
-  const snippetPattern =
-    /\n\s*\d+\s*\|\s*.+\n\s*\d+\s*\|\s*.+\n\s*\d+\s*\|\s*.+/;
-  const match = snippetPattern.exec(text);
+function extractExpected(text: string): string {
+  const match = text.match(
+    /Expected:[\s\S]*?(?=\n\s*Received:|\n\s*Number of calls:|\n\s*$)/
+  );
   return match ? match[0].trim() : '';
 }
 
 /**
- * expected と received の値を抽出する
+ * 実際の値を抽出
  */
-function extractExpectedReceived(text: string): {
-  expected: string;
-  received: string;
-} {
-  // Vitestの実際の出力形式に合わせて調整
-  const expectedPattern = /Expected:(?:\s*\n)?\s*(.+?)(?=\n\s*Received:|$)/s;
-  const receivedPattern = /Received:(?:\s*\n)?\s*(.+?)(?=\n\s*$|$)/s;
+function extractReceived(text: string): string {
+  const match = text.match(/Received:[\s\S]*?(?=\n\s*Number of calls:|\n\s*$)/);
+  return match ? match[0].trim() : '';
+}
 
-  const expectedMatch = expectedPattern.exec(text);
-  const receivedMatch = receivedPattern.exec(text);
-
-  return {
-    expected: expectedMatch ? expectedMatch[1].trim() : '',
-    received: receivedMatch ? receivedMatch[1].trim() : '',
-  };
+/**
+ * コードスニペットを抽出
+ */
+function extractCodeSnippet(text: string): string {
+  const match = text.match(/(\[\n|\s+\[\n)[\s\S]*?(\]\n|\s+\]\n)/);
+  return match ? match[0].trim() : '';
 }
 
 /**
@@ -94,16 +102,21 @@ function extractExpectedReceived(text: string): {
 export function formatFailedTests(failedTests: FailedTest[]): string {
   return failedTests
     .map((test) => {
-      return `file: ${test.filePath}
-test: ${test.testName}
-error: ${test.errorMessage}
+      let result = `file: ${test.filePath}\ntest: ${test.testName}\nerror: ${test.errorMessage}`;
 
-code:
-${test.codeSnippet}
+      if (test.codeSnippet) {
+        result += `\n\ncode:\n${test.codeSnippet}`;
+      }
 
-expected: ${test.expected}
-received: ${test.received}
-`;
+      if (test.expected) {
+        result += `\n\nexpected:\n${test.expected}`;
+      }
+
+      if (test.received) {
+        result += `\n\nreceived:\n${test.received}`;
+      }
+
+      return result;
     })
-    .join('\n---\n\n');
+    .join('\n\n---\n\n');
 }

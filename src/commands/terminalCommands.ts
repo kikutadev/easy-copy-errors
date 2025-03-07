@@ -1,3 +1,4 @@
+// src/commands/vitestCommands.ts
 import * as vscode from 'vscode';
 import { captureTerminalText } from '../services/terminalCaptureService';
 import {
@@ -7,15 +8,13 @@ import {
 import { copyToClipboard } from '../services/clipboardService';
 
 /**
- * ターミナルからVitestテスト結果をコピーするコマンドハンドラー
+ * Vitestテスト結果をコピーするコマンドハンドラー
  */
 export async function copyVitestResultsHandler(): Promise<void> {
-  // 処理中メッセージを表示
   vscode.window.showInformationMessage(
     'Vitestテスト結果をキャプチャしています...'
   );
 
-  // ターミナルテキストをキャプチャ
   const terminalText = await captureTerminalText();
 
   if (!terminalText) {
@@ -25,25 +24,21 @@ export async function copyVitestResultsHandler(): Promise<void> {
     return;
   }
 
-  // Vitest出力を解析
   const failedTests = parseVitestOutput(terminalText);
 
   if (failedTests.length === 0) {
     vscode.window.showInformationMessage(
-      'ターミナル出力に失敗したテストが見つかりませんでした'
+      '失敗したテストが見つかりませんでした'
     );
     return;
   }
 
-  // 失敗したテストをフォーマット
   const formattedText = formatFailedTests(failedTests);
-
-  // クリップボードにコピー
   const success = await copyToClipboard(formattedText);
 
   if (success) {
     vscode.window.showInformationMessage(
-      `${failedTests.length}件の失敗したテストをクリップボードにコピーしました`
+      `${failedTests.length}件の失敗したテストをコピーしました`
     );
   } else {
     vscode.window.showErrorMessage('テスト結果のコピーに失敗しました');

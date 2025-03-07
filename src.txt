@@ -5,7 +5,10 @@ import * as vscode from 'vscode';
 import {
   copyAllDiagnosticsHandler,
   copyErrorsOnlyHandler,
+  copyGroupedDiagnosticsHandler,
+  copyGroupedErrorsOnlyHandler,
 } from './commands/errorCommands';
+import { copyVitestResultsHandler } from './commands/terminalCommands';
 
 export function activate(context: vscode.ExtensionContext) {
   console.log('Extension "easy-copy-errors" is now active');
@@ -20,10 +23,28 @@ export function activate(context: vscode.ExtensionContext) {
     'easy-copy-errors.copyErrorsOnly',
     copyErrorsOnlyHandler
   );
+  const groupedDiagnosticsCommand = vscode.commands.registerCommand(
+    'easy-copy-errors.copyGroupedErrors',
+    copyGroupedDiagnosticsHandler
+  );
 
+  const groupedErrorsOnlyCommand = vscode.commands.registerCommand(
+    'easy-copy-errors.copyGroupedErrorsOnly',
+    copyGroupedErrorsOnlyHandler
+  );
+  // 新しいVitestテスト結果コピーコマンドを登録
+  const vitestResultsCommand = vscode.commands.registerCommand(
+    'easy-copy-errors.copyVitestResults',
+    copyVitestResultsHandler
+  );
 
-
-  context.subscriptions.push(allDiagnosticsCommand, errorsOnlyCommand);
+  context.subscriptions.push(
+    allDiagnosticsCommand,
+    errorsOnlyCommand,
+    groupedDiagnosticsCommand,
+    groupedErrorsOnlyCommand,
+    vitestResultsCommand
+  );
 }
 
 export function deactivate() {}
@@ -48,6 +69,7 @@ suite('Extension Test Suite', () => {
 
 ----
 src/utils/file.ts
+// src/utils/file.ts
 import * as vscode from 'vscode';
 import * as path from 'path';
 
@@ -71,6 +93,7 @@ export function getFileName(uri: vscode.Uri): string {
 
 ----
 src/utils/config.ts
+// src/utils/config.ts
 import * as vscode from 'vscode';
 
 /**
@@ -104,21 +127,83 @@ export function includeFileName(): boolean {
   return getConfiguration().get<boolean>('includeFileName') ?? true;
 }
 
+/**
+ * エラーをグループ化するかどうかを取得
+ */
+export function useGrouping(): boolean {
+  return getConfiguration().get<boolean>('useGrouping') ?? false;
+}
+
+----
+src/commands/terminalCommands.ts
+// src/commands/vitestCommands.ts
+import * as vscode from 'vscode';
+import { captureTerminalText } from '../services/terminalCaptureService';
+import {
+  parseVitestOutput,
+  formatFailedTests,
+} from '../services/vitestParserService';
+import { copyToClipboard } from '../services/clipboardService';
+
+/**
+ * Vitestテスト結果をコピーするコマンドハンドラー
+ */
+export async function copyVitestResultsHandler(): Promise<void> {
+  vscode.window.showInformationMessage(
+    'Vitestテスト結果をキャプチャしています...'
+  );
+
+  const terminalText = await captureTerminalText();
+
+  if (!terminalText) {
+    vscode.window.showErrorMessage(
+      'ターミナルテキストのキャプチャに失敗しました'
+    );
+    return;
+  }
+
+  const failedTests = parseVitestOutput(terminalText);
+
+  if (failedTests.length === 0) {
+    vscode.window.showInformationMessage(
+      '失敗したテストが見つかりませんでした'
+    );
+    return;
+  }
+
+  const formattedText = formatFailedTests(failedTests);
+  const success = await copyToClipboard(formattedText);
+
+  if (success) {
+    vscode.window.showInformationMessage(
+      `${failedTests.length}件の失敗したテストをコピーしました`
+    );
+  } else {
+    vscode.window.showErrorMessage('テスト結果のコピーに失敗しました');
+  }
+}
+
 ----
 src/commands/errorCommands.ts
+// src/commands/errorCommands.ts
 import * as vscode from 'vscode';
+import {
+  getCurrentFileDiagnostics,
+  filterDiagnostics,
+  buildDiagnosticContext,
+  groupDiagnostics,
+} from '../services/diagnosticsService';
+import {
+  formatDiagnostics,
+  formatDiagnosticGroups,
+} from '../services/formatterService';
 import {
   copyToClipboard,
   showCopySuccessMessage,
   showNoDiagnosticsMessage,
   showNoEditorMessage,
 } from '../services/clipboardService';
-import {
-  buildDiagnosticContext,
-  filterDiagnostics,
-  getCurrentFileDiagnostics,
-} from '../services/diagnosticsService';
-import { formatDiagnostics } from '../services/formatterService';
+import { useGrouping } from '../utils/config';
 
 /**
  * すべての診断情報をコピーするコマンドハンドラー
@@ -135,11 +220,30 @@ export async function copyErrorsOnlyHandler(): Promise<void> {
 }
 
 /**
+ * グループ化したすべての診断情報をコピーするコマンドハンドラー
+ */
+export async function copyGroupedDiagnosticsHandler(): Promise<void> {
+  await copyDiagnosticsWithOptions({ errorsOnly: false, forceGrouped: true });
+}
+
+/**
+ * グループ化したエラーのみをコピーするコマンドハンドラー
+ */
+export async function copyGroupedErrorsOnlyHandler(): Promise<void> {
+  await copyDiagnosticsWithOptions({ errorsOnly: true, forceGrouped: true });
+}
+
+/**
  * オプションを指定して診断情報をコピー
  */
 async function copyDiagnosticsWithOptions(options: {
   errorsOnly: boolean;
+  forceGrouped?: boolean;
 }): Promise<void> {
+  // 設定からグループ化の設定を取得（または強制的にグループ化）
+  const grouped = options.forceGrouped || useGrouping();
+
+  // 現在のファイルの診断情報を取得
   const diagnostics = getCurrentFileDiagnostics();
 
   if (!diagnostics) {
@@ -147,6 +251,7 @@ async function copyDiagnosticsWithOptions(options: {
     return;
   }
 
+  // 診断情報をフィルタリング
   const filteredDiagnostics = filterDiagnostics(diagnostics, options);
 
   if (filteredDiagnostics.length === 0) {
@@ -155,21 +260,33 @@ async function copyDiagnosticsWithOptions(options: {
   }
 
   const editor = vscode.window.activeTextEditor!;
-  const formattedText = formatDiagnostics(
-    filteredDiagnostics,
-    editor.document,
-    buildDiagnosticContext
-  );
+  let formattedText: string;
 
+  // グループ化するかどうかで処理を分岐
+  if (grouped) {
+    // 診断情報をグループ化
+    const groups = groupDiagnostics(filteredDiagnostics, editor.document);
+    formattedText = formatDiagnosticGroups(groups);
+  } else {
+    // 通常のフォーマット
+    formattedText = formatDiagnostics(
+      filteredDiagnostics,
+      editor.document,
+      buildDiagnosticContext
+    );
+  }
+
+  // クリップボードにコピー
   const success = await copyToClipboard(formattedText);
 
   if (success) {
-    showCopySuccessMessage(options.errorsOnly);
+    showCopySuccessMessage(options.errorsOnly, grouped);
   }
 }
 
 ----
 src/services/formatterService.ts
+// src/services/formatterService.ts
 import * as vscode from 'vscode';
 import { getFileName, getRelativePath } from '../utils/file';
 import {
@@ -177,7 +294,7 @@ import {
   getCustomFormat,
   includeFileName,
 } from '../utils/config';
-import { DiagnosticContext } from './diagnosticsService';
+import { DiagnosticContext, DiagnosticGroup } from './diagnosticsService';
 
 /**
  * 診断情報をフォーマット
@@ -242,8 +359,172 @@ export function formatDiagnostics(
     .join('\n\n');
 }
 
+/**
+ * グループ化された診断情報をフォーマット
+ */
+export function formatDiagnosticGroups(groups: DiagnosticGroup[]): string {
+  return groups
+    .map((group) => formatDiagnosticGroup(group))
+    .join('\n\n---\n\n');
+}
+
+/**
+ * 単一の診断情報グループをフォーマット（シンプルなスタイル）
+ * 同じファイル内で同じエラーメッセージのものをまとめる
+ */
+function formatDiagnosticGroup(group: DiagnosticGroup): string {
+  const { contexts, message } = group;
+
+  if (contexts.length === 0) {
+    return '';
+  }
+
+  // 最初のコンテキストからファイル情報を取得
+  const firstContext = contexts[0];
+  const relativePath = getRelativePath(firstContext.document.uri);
+
+  // ファイル情報を出力
+  let result = `file: ${relativePath}\n`;
+
+  // 各行の情報をフォーマット
+  contexts.forEach((context) => {
+    result += `Line ${context.line}: ${context.lineContent}\n`;
+  });
+
+  // エラーメッセージを最後に追加
+  result += `${message}`;
+
+  return result;
+}
+
+----
+src/services/vitestParserService.ts
+// src/services/vitestParserService.ts
+/**
+ * 失敗したVitestテストの情報
+ */
+export interface FailedTest {
+  filePath: string;
+  testName: string;
+  errorMessage: string;
+  codeSnippet: string;
+  expected: string;
+  received: string;
+}
+
+/**
+ * Vitestのテスト出力から失敗したテストを抽出する
+ */
+export function parseVitestOutput(text: string): FailedTest[] {
+  const failedTests: FailedTest[] = [];
+
+  // テストファイルのセクションを検出
+  const testSections = text.split(/❯\s+[^\s]+\s+\(\d+\s+tests/g);
+
+  for (let i = 1; i < testSections.length; i++) {
+    const section = testSections[i];
+    const filePathMatch = text.match(
+      new RegExp(
+        `❯\\s+([^\\s]+)\\s+\\(\\d+\\s+tests.*?${section
+          .substring(0, 30)
+          .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`,
+        's'
+      )
+    );
+
+    if (!filePathMatch) continue;
+    const filePath = filePathMatch[1];
+
+    // 失敗したテスト行を検出
+    const failedTestPattern =
+      /×\s+(.+?)\s+\d+ms\n\s+→\s+(.+?)(?=\n\s+[×✓]|\n\s*$)/gs;
+    let testMatch;
+
+    while ((testMatch = failedTestPattern.exec(section)) !== null) {
+      const testName = testMatch[1].trim();
+      const errorMessage = testMatch[2].trim();
+
+      // テストの詳細テキストを抽出
+      const startIdx = testMatch.index + testMatch[0].length;
+      const nextTestMatch = failedTestPattern.exec(section);
+      failedTestPattern.lastIndex = testMatch.index + 1; // 検索位置をリセット
+
+      const endIdx = nextTestMatch ? nextTestMatch.index : section.length;
+      const detailText = section.substring(startIdx, endIdx);
+
+      // 期待値と実際の値を抽出
+      const expected = extractExpected(detailText);
+      const received = extractReceived(detailText);
+      const codeSnippet = extractCodeSnippet(detailText);
+
+      failedTests.push({
+        filePath,
+        testName,
+        errorMessage,
+        codeSnippet,
+        expected,
+        received,
+      });
+    }
+  }
+
+  return failedTests;
+}
+
+/**
+ * 期待値を抽出
+ */
+function extractExpected(text: string): string {
+  const match = text.match(
+    /Expected:[\s\S]*?(?=\n\s*Received:|\n\s*Number of calls:|\n\s*$)/
+  );
+  return match ? match[0].trim() : '';
+}
+
+/**
+ * 実際の値を抽出
+ */
+function extractReceived(text: string): string {
+  const match = text.match(/Received:[\s\S]*?(?=\n\s*Number of calls:|\n\s*$)/);
+  return match ? match[0].trim() : '';
+}
+
+/**
+ * コードスニペットを抽出
+ */
+function extractCodeSnippet(text: string): string {
+  const match = text.match(/(\[\n|\s+\[\n)[\s\S]*?(\]\n|\s+\]\n)/);
+  return match ? match[0].trim() : '';
+}
+
+/**
+ * 失敗したテスト情報をフォーマットする
+ */
+export function formatFailedTests(failedTests: FailedTest[]): string {
+  return failedTests
+    .map((test) => {
+      let result = `file: ${test.filePath}\ntest: ${test.testName}\nerror: ${test.errorMessage}`;
+
+      if (test.codeSnippet) {
+        result += `\n\ncode:\n${test.codeSnippet}`;
+      }
+
+      if (test.expected) {
+        result += `\n\nexpected:\n${test.expected}`;
+      }
+
+      if (test.received) {
+        result += `\n\nreceived:\n${test.received}`;
+      }
+
+      return result;
+    })
+    .join('\n\n---\n\n');
+}
+
 ----
 src/services/diagnosticsService.ts
+// src/services/diagnosticsService.ts
 import * as vscode from 'vscode';
 
 /**
@@ -283,7 +564,6 @@ export function filterDiagnostics(
   diagnostics: vscode.Diagnostic[],
   filterOptions: {
     errorsOnly?: boolean;
-    // 将来的に他のフィルタリングオプションを追加可能
   } = {}
 ): vscode.Diagnostic[] {
   const { errorsOnly = false } = filterOptions;
@@ -328,8 +608,116 @@ export interface DiagnosticContext {
   message: string;
 }
 
+/**
+ * 診断情報のグループ
+ * 同じファイル内で同じエラーメッセージを持つものをグループ化
+ */
+export interface DiagnosticGroup {
+  // グループ内のコンテキスト一覧
+  contexts: DiagnosticContext[];
+  // 共通のファイルパス
+  filePath: string;
+  // 共通のエラーメッセージ
+  message: string;
+  // グループに固有のID
+  id: string;
+}
+
+/**
+ * 診断情報をグループ化する
+ * 同じファイル内の同じエラーメッセージのものをまとめる
+ */
+export function groupDiagnostics(
+  diagnostics: vscode.Diagnostic[],
+  document: vscode.TextDocument
+): DiagnosticGroup[] {
+  // ファイル+メッセージの組み合わせでグループ化
+  const groups: { [key: string]: DiagnosticGroup } = {};
+
+  // 各診断情報を処理
+  diagnostics.forEach((diagnostic) => {
+    const context = buildDiagnosticContext(diagnostic, document);
+    const message = diagnostic.message;
+    const filePath = document.fileName;
+
+    // グループのキーを作成（ファイルパス+メッセージ）
+    const groupKey = `${filePath}:${message}`;
+
+    if (!groups[groupKey]) {
+      groups[groupKey] = {
+        contexts: [],
+        filePath,
+        message,
+        id: groupKey,
+      };
+    }
+
+    groups[groupKey].contexts.push(context);
+  });
+
+  // 結果を配列に変換してソート
+  return (
+    Object.values(groups)
+      // 行番号でソート
+      .map((group) => {
+        group.contexts.sort((a, b) => a.line - b.line);
+        return group;
+      })
+      // グループをファイルパスでソート
+      .sort((a, b) => a.filePath.localeCompare(b.filePath))
+  );
+}
+
+----
+src/services/terminalCaptureService.ts
+import * as vscode from 'vscode';
+
+/**
+ * ターミナルの出力テキストをキャプチャする
+ * @returns キャプチャしたテキスト、または失敗した場合はnull
+ */
+export async function captureTerminalText(): Promise<string | null> {
+  // 元のクリップボード内容を保存
+  const originalClipboard = await vscode.env.clipboard.readText();
+
+  try {
+    // アクティブなターミナルが存在するか確認
+    if (!vscode.window.activeTerminal) {
+      vscode.window.showWarningMessage(
+        'アクティブなターミナルが見つかりません'
+      );
+      return null;
+    }
+
+    // ターミナルのテキストをすべて選択
+    await vscode.commands.executeCommand('workbench.action.terminal.selectAll');
+    // 選択したテキストをコピー
+    await vscode.commands.executeCommand(
+      'workbench.action.terminal.copySelection'
+    );
+    // 選択を解除
+    await vscode.commands.executeCommand(
+      'workbench.action.terminal.clearSelection'
+    );
+
+    // クリップボードからテキストを取得
+    const terminalText = await vscode.env.clipboard.readText();
+
+    // 元のクリップボード内容を復元
+    await vscode.env.clipboard.writeText(originalClipboard);
+
+    return terminalText;
+  } catch (error) {
+    console.error('ターミナルテキストのキャプチャに失敗:', error);
+    // 元のクリップボード内容を復元
+    await vscode.env.clipboard.writeText(originalClipboard);
+    return null;
+  }
+}
+
 ----
 src/services/clipboardService.ts
+// src/services/clipboardService.ts
 import * as vscode from 'vscode';
 
 /**
@@ -340,7 +728,7 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     await vscode.env.clipboard.writeText(text);
     return true;
   } catch (error) {
-    console.error('Failed to copy to clipboard:', error);
+    console.error('クリップボードへのコピーに失敗しました:', error);
     return false;
   }
 }
@@ -348,10 +736,17 @@ export async function copyToClipboard(text: string): Promise<boolean> {
 /**
  * クリップボードへのコピー成功時のメッセージを表示
  */
-export function showCopySuccessMessage(isErrorsOnly: boolean = false): void {
-  const message = isErrorsOnly
-    ? 'Errors copied to clipboard.'
-    : 'All diagnostics copied to clipboard.';
+export function showCopySuccessMessage(
+  isErrorsOnly: boolean = false,
+  isGrouped: boolean = false
+): void {
+  let message = isErrorsOnly ? 'エラーのみ' : 'すべての診断情報';
+
+  if (isGrouped) {
+    message += '（グループ化）';
+  }
+
+  message += 'をクリップボードにコピーしました！';
 
   vscode.window.showInformationMessage(message);
 }
@@ -361,8 +756,8 @@ export function showCopySuccessMessage(isErrorsOnly: boolean = false): void {
  */
 export function showNoDiagnosticsMessage(isErrorsOnly: boolean = false): void {
   const message = isErrorsOnly
-    ? 'No errors found in the current file.'
-    : 'No diagnostics found in the current file.';
+    ? '現在のファイルにエラーがありません。'
+    : '現在のファイルに診断情報がありません。';
 
   vscode.window.showInformationMessage(message);
 }
@@ -371,7 +766,9 @@ export function showNoDiagnosticsMessage(isErrorsOnly: boolean = false): void {
  * アクティブなエディタがない場合のメッセージを表示
  */
 export function showNoEditorMessage(): void {
-  vscode.window.showInformationMessage('No active editor found.');
+  vscode.window.showInformationMessage(
+    'アクティブなエディタが見つかりません。'
+  );
 }
 
 --END--
