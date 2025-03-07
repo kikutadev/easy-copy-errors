@@ -15,6 +15,45 @@ export async function copyToClipboard(text: string): Promise<boolean> {
 }
 
 /**
+ * タイムアウト付きの通知メッセージを表示する
+ * 指定した時間（ミリ秒）後に自動的に通知を閉じる
+ * @param message 表示するメッセージ
+ * @param type メッセージの種類 ('info', 'warning', 'error')
+ * @param timeout 自動的に閉じるまでの時間（ミリ秒）
+ */
+export function showTimedMessage(
+  message: string,
+  type: 'info' | 'warning' | 'error' = 'info',
+  timeout: number = 5000
+): void {
+  let messagePromise: Thenable<any>;
+
+  // メッセージの種類に応じた表示メソッドを使用
+  switch (type) {
+    case 'warning':
+      messagePromise = vscode.window.showWarningMessage(message);
+      break;
+    case 'error':
+      messagePromise = vscode.window.showErrorMessage(message);
+      break;
+    case 'info':
+    default:
+      messagePromise = vscode.window.showInformationMessage(message);
+      break;
+  }
+
+  // タイムアウト後にメッセージを閉じる
+  setTimeout(() => {
+    // VSCodeの内部APIを使用してメッセージを閉じる
+    // @ts-ignore: VSCodeの内部APIへのアクセス
+    if (messagePromise && messagePromise.cancel) {
+      // @ts-ignore: VSCodeの内部APIへのアクセス
+      messagePromise.cancel();
+    }
+  }, timeout);
+}
+
+/**
  * クリップボードへのコピー成功時のメッセージを表示
  */
 export function showCopySuccessMessage(
@@ -29,7 +68,8 @@ export function showCopySuccessMessage(
 
   message += 'をクリップボードにコピーしました！';
 
-  vscode.window.showInformationMessage(message);
+  -vscode.window.showInformationMessage(message);
+  showTimedMessage(message, 'info');
 }
 
 /**
@@ -40,14 +80,12 @@ export function showNoDiagnosticsMessage(isErrorsOnly: boolean = false): void {
     ? '現在のファイルにエラーがありません。'
     : '現在のファイルに診断情報がありません。';
 
-  vscode.window.showInformationMessage(message);
+  showTimedMessage(message, 'info');
 }
 
 /**
  * アクティブなエディタがない場合のメッセージを表示
  */
 export function showNoEditorMessage(): void {
-  vscode.window.showInformationMessage(
-    'アクティブなエディタが見つかりません。'
-  );
+  showTimedMessage('アクティブなエディタが見つかりません。', 'info');
 }
