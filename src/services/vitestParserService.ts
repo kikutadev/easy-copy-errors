@@ -10,7 +10,42 @@ export interface FailedTest {
   expected: string;
   received: string;
 }
+/**
+ * ファイル別にグループ化された失敗テスト
+ */
+export interface TestFileGroup {
+  filePath: string;
+  displayName: string;
+  failedTests: FailedTest[];
+}
 
+/**
+ * 失敗したテストをファイル別にグループ化する
+ */
+export function groupTestsByFile(tests: FailedTest[]): TestFileGroup[] {
+  // ファイルパスごとにグループ化
+  const groups: { [key: string]: TestFileGroup } = {};
+
+  tests.forEach((test) => {
+    if (!groups[test.filePath]) {
+      // ファイル名の部分だけを抽出（表示用）
+      const displayName = test.filePath.split('/').pop() || test.filePath;
+
+      groups[test.filePath] = {
+        filePath: test.filePath,
+        displayName,
+        failedTests: [],
+      };
+    }
+
+    groups[test.filePath].failedTests.push(test);
+  });
+
+  // 配列に変換してファイルパスでソート
+  return Object.values(groups).sort((a, b) =>
+    a.filePath.localeCompare(b.filePath)
+  );
+}
 /**
  * Vitestのテスト出力から失敗したテストを抽出する
  * 複数の抽出方法を試し、結果が見つからない場合は次の方法を試すフォールバック機構を実装

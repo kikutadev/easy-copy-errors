@@ -68,6 +68,14 @@
       {
         "command": "easy-copy-errors.copyVitestResults",
         "title": "Copy Vitest Results"
+      },
+      {
+        "command": "easy-copy-errors.selectVitestResults",
+        "title": "Vitestテスト結果を選択してコピー"
+      },
+      {
+        "command": "easy-copy-errors.copyAllVitestResults",
+        "title": "Vitestテスト結果を全てコピー"
       }
     ],
     "keybindings": [
@@ -97,6 +105,18 @@
       },
       {
         "command": "easy-copy-errors.copyVitestResults",
+        "key": "ctrl+alt+v",
+        "mac": "cmd+option+v",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "easy-copy-errors.selectVitestResults",
+        "key": "ctrl+alt+v",
+        "mac": "cmd+option+v",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "easy-copy-errors.copyAllVitestResults",
         "key": "ctrl+alt+v",
         "mac": "cmd+option+v",
         "when": "editorTextFocus"

@@ -1,16 +1,79 @@
 // src/commands/vitestCommands.ts
 import * as vscode from 'vscode';
+import { copyToClipboard } from '../services/clipboardService';
 import { captureTerminalText } from '../services/terminalCaptureService';
 import {
-  parseVitestOutput,
+  showIndividualTestSelectionUI,
+  showTestFileSelectionUI,
+} from '../services/testSelectionService';
+import {
   formatFailedTests,
+  groupTestsByFile,
+  parseVitestOutput,
 } from '../services/vitestParserService';
-import { copyToClipboard } from '../services/clipboardService';
 
 /**
- * Vitestテスト結果をコピーするコマンドハンドラー
+ * Vitestテスト結果をファイル単位で選択してコピーするコマンドハンドラー
  */
-export async function copyVitestResultsHandler(): Promise<void> {
+export async function copySelectedVitestResultsHandler(): Promise<void> {
+  vscode.window.showInformationMessage(
+    'Vitestテスト結果をキャプチャしています...'
+  );
+
+  // ターミナルテキストをキャプチャ
+  const terminalText = await captureTerminalText();
+
+  if (!terminalText) {
+    vscode.window.showErrorMessage(
+      'ターミナルテキストのキャプチャに失敗しました'
+    );
+    return;
+  }
+
+  // テスト結果を解析
+  const failedTests = parseVitestOutput(terminalText);
+
+  if (failedTests.length === 0) {
+    vscode.window.showInformationMessage(
+      '失敗したテストが見つかりませんでした'
+    );
+    return;
+  }
+
+  // ファイル別にグループ化
+  const testGroups = groupTestsByFile(failedTests);
+
+  // テストファイル選択UIを表示
+  const selectedFileGroup = await showTestFileSelectionUI(testGroups);
+  if (!selectedFileGroup) {
+    // キャンセルされた
+    return;
+  }
+
+  // 個別テスト選択UIを表示
+  const selectedTests = await showIndividualTestSelectionUI(selectedFileGroup);
+  if (!selectedTests) {
+    // キャンセルされた
+    return;
+  }
+
+  // 選択されたテストをフォーマットしてコピー
+  const formattedText = formatFailedTests(selectedTests);
+  const success = await copyToClipboard(formattedText);
+
+  if (success) {
+    vscode.window.showInformationMessage(
+      `${selectedTests.length}件の失敗したテストをコピーしました`
+    );
+  } else {
+    vscode.window.showErrorMessage('テスト結果のコピーに失敗しました');
+  }
+}
+
+/**
+ * シンプルな全テスト結果コピーハンドラー（以前の実装と同じ）
+ */
+export async function copyAllVitestResultsHandler(): Promise<void> {
   vscode.window.showInformationMessage(
     'Vitestテスト結果をキャプチャしています...'
   );
