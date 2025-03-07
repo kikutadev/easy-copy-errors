@@ -41,8 +41,6 @@ export function extractReceived(text: string): string {
  * @returns 抽出されたコードスニペットの文字列、見つからない場合は空文字列
  */
 export function extractCodeSnippet(text: string): string {
-  // Number of calls: の後にスニペットがある場合も抽出できるようにするため、
-  // まず "received" 部分と "code snippet" 部分を連結する可能性を検討
   // テキスト中に行番号付きのコードスニペットが含まれているかチェック
   const snippetIndex = text.indexOf('❯ ');
   if (snippetIndex !== -1) {
@@ -75,11 +73,10 @@ export function extractCodeSnippet(text: string): string {
  */
 export function extractTestsMethod1(text: string): FailedTest[] {
   const failedTests: FailedTest[] = [];
+
   // ファイルパスとテスト名を一度に抽出するパターンを試す
   const fileTestMatches = Array.from(
-    text.matchAll(
-      /FAIL\s+([a-zA-Z0-9_\-/.]+\.(spec|test)\.[jt]sx?)\s+>\s+([^>][^\n]+?)(?=\s+\d+ms|\s*$)/g
-    )
+    text.matchAll(VitestPatterns.filePathWithTestName)
   );
 
   if (fileTestMatches.length > 0) {
@@ -105,9 +102,7 @@ export function extractTestsMethod1(text: string): FailedTest[] {
       const testSection = text.substring(testStart, testEnd);
 
       // エラーメッセージを抽出
-      const errorMatch = testSection.match(
-        /(?:AssertionError|TypeError|Error):\s+(.+?)(?=\n\s*❯|\n\s*\n|\n\s*$)/s
-      );
+      const errorMatch = testSection.match(VitestPatterns.errorMessage);
       const errorMessage = errorMatch ? errorMatch[1].trim() : '';
 
       // 行番号情報を抽出
@@ -197,25 +192,22 @@ export function extractTestsMethod1(text: string): FailedTest[] {
  */
 export function extractTestsMethod2(text: string): FailedTest[] {
   const failedTests: FailedTest[] = [];
+
   // 詳細なエラーセクションを抽出
-  const errorSections = text.split(/⎯{10,}[^\n]*\n\n/);
+  const errorSections = text.split(VitestPatterns.errorSectionDivider);
   for (const section of errorSections) {
     if (!section.includes('FAIL ')) {
       continue;
     }
 
     // ファイルパスとテスト名を抽出
-    const headerMatch = section.match(
-      /FAIL\s+([a-zA-Z0-9_\-/.]+\.(spec|test)\.[jt]sx?)\s+>\s+([^>][^\n]+?)(?=\s+\d+ms|\s*$)/
-    );
+    const headerMatch = section.match(VitestPatterns.filePathWithTestName);
     if (headerMatch) {
       const filePath = headerMatch[1];
       const testName = headerMatch[3].trim();
 
       // エラーメッセージを抽出
-      const errorMatch = section.match(
-        /(?:AssertionError|TypeError|Error):\s+(.+?)(?=\n\s*❯|\n\s*\n|\n\s*$)/s
-      );
+      const errorMatch = section.match(VitestPatterns.errorMessage);
       const errorMessage = errorMatch ? errorMatch[1].trim() : '';
 
       // 行番号情報を抽出
@@ -245,6 +237,7 @@ export function extractTestsMethod2(text: string): FailedTest[] {
   if (failedTests.length > 0) {
     return failedTests;
   }
+
   // 失敗したテストの複数のパターンを試す
   for (const pattern of VitestPatterns.failedTestPatterns) {
     // 正規表現のグローバルインデックスをリセット
@@ -308,7 +301,7 @@ export function extractTestsMethod3(text: string): FailedTest[] {
   const failedTests: FailedTest[] = [];
 
   // 詳細なエラー情報セクションを探す
-  const detailedErrorSections = text.split(/Failed Tests \d+/);
+  const detailedErrorSections = text.split(VitestPatterns.failedTestsHeader);
   if (detailedErrorSections.length > 1) {
     const detailedSection = detailedErrorSections[1];
     const individualTests = detailedSection.split(/\n\s*FAIL\s+/);
@@ -318,16 +311,14 @@ export function extractTestsMethod3(text: string): FailedTest[] {
 
       // ファイルパスとテスト名を抽出
       const fileTestMatch = testSection.match(
-        /FAIL\s+([a-zA-Z0-9_\-/.]+\.(spec|test)\.[jt]sx?)\s+>\s+([^>][^\n]+?)(?=\s*\n)/
+        VitestPatterns.filePathAndTestName
       );
       if (fileTestMatch) {
         const filePath = fileTestMatch[1];
         const testName = fileTestMatch[3].trim();
 
         // エラーメッセージを抽出
-        const errorMatch = testSection.match(
-          /(?:AssertionError|TypeError|Error):\s+(.+?)(?=\n\s*❯|\n\s*\n|\n\s*$)/s
-        );
+        const errorMatch = testSection.match(VitestPatterns.errorMessage);
         const errorMessage = errorMatch ? errorMatch[1].trim() : '';
 
         // 行番号情報を抽出
@@ -358,6 +349,7 @@ export function extractTestsMethod3(text: string): FailedTest[] {
       return failedTests;
     }
   }
+
   // FAILで始まる行を検索し、そのセクションを抽出
   const failSections = text.split(/\n\s*FAIL\s+/);
   for (let i = 1; i < failSections.length; i++) {
@@ -372,10 +364,8 @@ export function extractTestsMethod3(text: string): FailedTest[] {
     const filePath = filePathMatch[1];
 
     // テスト名を抽出（ファイルパスの後の部分）
-    const testNameMatch = section.match(
-      /FAIL\s+[a-zA-Z0-9_\-/.]+\.(spec|test)\.[jt]sx?\s+>\s+(.+?)(?=\n)/i
-    );
-    const testName = testNameMatch ? testNameMatch[2].trim() : 'Unknown test';
+    const testNameMatch = section.match(VitestPatterns.filePathAndTestName);
+    const testName = testNameMatch ? testNameMatch[3].trim() : 'Unknown test';
 
     // エラーメッセージを抽出
     const errorMessageMatch = section.match(VitestPatterns.errorMessage);
@@ -424,9 +414,7 @@ export function extractTestsMethod3(text: string): FailedTest[] {
     const line = errorLines[i];
 
     // エラーメッセージらしき情報を抽出
-    const errorMatch = line.match(
-      /(?:error|fail|failed|assertion)(?:\s*:\s*|\s+)(.+)/i
-    );
+    const errorMatch = line.match(VitestPatterns.errorLine);
     if (!errorMatch) {
       continue;
     }
@@ -443,9 +431,7 @@ export function extractTestsMethod3(text: string): FailedTest[] {
     // テスト名を探す
     let testName = 'Unknown test';
     for (const prevLine of prevLines) {
-      const testMatch = prevLine.match(
-        /(?:test|it|describe)(?:\s*\(\s*|\s+)['"]([^'"]+)['"]/i
-      );
+      const testMatch = prevLine.match(VitestPatterns.testFunction);
       if (testMatch) {
         testName = testMatch[1];
         break;
@@ -461,7 +447,7 @@ export function extractTestsMethod3(text: string): FailedTest[] {
     }
 
     // 行番号情報を探す
-    const lineNumberMatch = fullContext.match(/[:\s](\d+:\d+)[\s:]/);
+    const lineNumberMatch = fullContext.match(VitestPatterns.lineNumberInText);
     const lineNumber = lineNumberMatch ? lineNumberMatch[1] : '';
 
     // 追加の詳細情報を抽出

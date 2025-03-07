@@ -15,13 +15,13 @@ export const VitestPatterns = {
    * テスト名抽出パターン
    * 例: NavigationHandler > handleBeforeUnload > ビーコンを正しく送信する
    */
-  testName: />\s+([^>][^\n]+?)(?=\s+\d+ms|\s*$)/,
+  testName: /^([^\n]+)/,
 
   /**
    * ファイルパス抽出パターン
    * 例: src/recorder/recorder/handlers/NavigationHandler.test.ts
    */
-  filePath: /(?:FAIL|❯)\s+([a-zA-Z0-9_\-/.]+\.(spec|test)\.[jt]sx?)/i,
+  filePath: /([a-zA-Z0-9_\-/.]+\.(spec|test)\.[jt]sx?)/i,
 
   /**
    * エラーメッセージ抽出パターン
@@ -40,8 +40,8 @@ export const VitestPatterns = {
    * コードスニペット抽出パターン群
    */
   codeSnippet: [
-    // ❯行から始まり、行番号付きのコードブロックを含むパターン
-    /❯\s+[\w/\.\-]+:\d+:\d+\n[\s\S]*?\d+\s*\|\s*.+\n\s*\|.*\^.*\n(?:\s*\d+\s*\|\s*.+\n)*/s,
+    // Vitestの行番号つきコードスニペット (❯ から始まる行を含む最小限のブロック)
+    /❯\s+[\w/\.\-]+:\d+:\d+[\s\S]*?(?=\n\s*⎯{10,}|\n\s*FAIL|\n\s*$|$)/s,
 
     // 行番号とパイプ記号を含むコードスニペット（より多くの行を含むようにパターンを改善）
     /\n\s*\d+\s*\|\s*.+\n\s*\d+\s*\|\s*.+\n\s*\d+\s*\|\s*.+(?:\n\s*\d+\s*\|\s*.+)*/s,
@@ -50,9 +50,8 @@ export const VitestPatterns = {
     /\n\s*\d+\s*\|.*\n\s*\|.*\^.*\n/s,
 
     // 以前のパターンをフォールバックとして保持
-    // より多くのスタックトレース行にマッチするパターン
-
-    /\n\s*at\s+[^\n]+(?:\n\s*at\s+[^\n]+)+/s,
+    /(\[\n|\s+\[\n)[\s\S]*?(\]\n|\s+\]\n)/s,
+    /\n\s*at\s+[^\n]+\n\s*at\s+[^\n]+/s,
     /\{\s*[\s\S]*?:\s*["'][\s\S]*?["'][\s\S]*?\}/s,
   ],
 
@@ -83,7 +82,7 @@ export const VitestPatterns = {
    */
   filePathWithTestName:
     /FAIL\s+([a-zA-Z0-9_\-/.]+\.(spec|test)\.[jt]sx?)\s+>\s+([^>][^\n]+?)(?=\s+\d+ms|\s*$)/,
-  
+
   /**
    * 失敗したテスト検出パターン群
    */
@@ -110,4 +109,39 @@ export const VitestPatterns = {
     /([^/\s]+\/[^\s]+\.[jt]sx?)/i,
     /([a-zA-Z0-9_\-/.]+\.(spec|test)\.[jt]sx?)/i,
   ],
+
+  /**
+   * テスト名とファイルパスの抽出パターン
+   * 例: FAIL src/recorder/recorder/handlers/NavigationHandler.test.ts > ActionRecorder > 基本機能
+   */
+  filePathAndTestName:
+    /FAIL\s+([a-zA-Z0-9_\-/.]+\.(spec|test)\.[jt]sx?)\s+>\s+(.+?)(?=\n)/i,
+
+  /**
+   * エラーや失敗を示す行の抽出パターン
+   * 例: error: expected value to match
+   */
+  errorLine: /(?:error|fail|failed|assertion)(?:\s*:\s*|\s+)(.+)/i,
+
+  /**
+   * テスト関数の名前抽出パターン
+   * 例: test("should do something")
+   */
+  testFunction: /(?:test|it|describe)(?:\s*\(\s*|\s+)['"]([^'"]+)['"]/i,
+
+  /**
+   * 行番号とコロンを含むパターン
+   * 例: 10:42
+   */
+  lineNumberInText: /[:\s](\d+:\d+)[\s:]/,
+
+  /**
+   * 詳細なエラーセクションの区切りパターン
+   */
+  errorSectionDivider: /⎯{10,}[^\n]*\n\n/,
+
+  /**
+   * Failed Testsセクションのパターン
+   */
+  failedTestsHeader: /Failed Tests \d+/,
 };
