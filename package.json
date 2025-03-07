@@ -103,8 +103,8 @@
   "extensionKind": [
     "workspace"
   ],
+  "l10n": "./src/l10n",
   "dependencies": {
     "@vscode/l10n": "^0.0.18"
-  },
-  "l10n": "./src/l10n"
+  }
 }
