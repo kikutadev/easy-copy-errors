@@ -1,10 +1,7 @@
 // src/extension.ts
 import * as vscode from 'vscode';
 import { copyDiagnosticsHandler } from './commands/errorCommands';
-import {
-  copyVitestResultsHandler,
-  copySelectedVitestResultsHandler,
-} from './commands/vitestCommands';
+import { copySelectedVitestResultsHandler } from './commands/vitestCommands';
 
 export function activate(context: vscode.ExtensionContext) {
   console.log('Extension "easy-copy-errors" is now active');
@@ -15,22 +12,12 @@ export function activate(context: vscode.ExtensionContext) {
     copyDiagnosticsHandler
   );
 
-  const vitestResultsCommand = vscode.commands.registerCommand(
-    'easy-copy-errors.copyVitestResults',
-    copyVitestResultsHandler
-  );
-
   const selectVitestResultsCommand = vscode.commands.registerCommand(
-    'easy-copy-errors.selectVitestResults',
+    'easy-copy-errors.copyVitestResults',
     copySelectedVitestResultsHandler
   );
 
-
-  context.subscriptions.push(
-    diagnosticsCommand,
-    vitestResultsCommand,
-    selectVitestResultsCommand,
-  );
+  context.subscriptions.push(diagnosticsCommand, selectVitestResultsCommand);
 }
 
 export function deactivate() {}
