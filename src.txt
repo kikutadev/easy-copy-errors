@@ -29,19 +29,22 @@ export function deactivate() {}
 ----
 src/l10n/bundle.l10n.en.json
 {
-  "拡張機能が読み込まれました": "Extension activated",
+  "extension activated": "Extension activated",
   "抽出方法1で失敗したテストが見つかりませんでした。方法2を試します。": "No failed tests found using extraction method 1. Trying method 2.",
   "抽出方法2で失敗したテストが見つかりませんでした。方法3を試します。": "No failed tests found using extraction method 2. Trying method 3.",
-  "抽出されたテスト数: {uniqueTests.length}": "Number of extracted tests: {uniqueTests.length}",
-  "ファイル: {test.filePath}, テスト: {test.testName}": "File: {test.filePath}, Test: {test.testName}",
-  "(check-all) 全てのテストを選択": "Select all tests",
+  "抽出されたテスト数: {uniqueTestsLength}": "Number of extracted tests: {uniqueTestsLength}",
+  "ファイル: {filePath}, テスト: {testName}": "File: {filePath}, Test: {testName}",
+  "失敗テスト: {failedTestsLength}件": "Failed tests: {failedTestsLength}",
+  "コピーするテストファイルを選択してください": "Please select test files to copy",
+  "全てのテストを選択": "Select all tests",
+  "({failedTestsLength}件)": "({failedTestsLength} items)",
   "コピーするテストを選択してください": "Please select tests to copy",
   "アクティブなターミナルが見つかりません": "No active terminal found",
   "ターミナルテキストのキャプチャに失敗:": "Failed to capture terminal text:",
   "クリップボードへのコピーに失敗しました:": "Failed to copy to clipboard:",
   "エラーのみ": "Errors only",
   "すべての診断情報": "All diagnostics",
-  "(message)をクリップボードにコピーしました！": "Copied to clipboard!",
+  "{message}をクリップボードにコピーしました！": "{message} copied to clipboard!",
   "現在のファイルにエラーがありません。": "No errors in the current file.",
   "現在のファイルに診断情報がありません。": "No diagnostics in the current file.",
   "アクティブなエディタが見つかりません。": "No active editor found.",
@@ -55,19 +58,22 @@ src/l10n/bundle.l10n.en.json
 ----
 src/l10n/bundle.l10n.json
 {
-  "拡張機能が読み込まれました": "extension activated",
+  "extension activated": "extension activated",
   "抽出方法1で失敗したテストが見つかりませんでした。方法2を試します。": "抽出方法1で失敗したテストが見つかりませんでした。方法2を試します。",
   "抽出方法2で失敗したテストが見つかりませんでした。方法3を試します。": "抽出方法2で失敗したテストが見つかりませんでした。方法3を試します。",
-  "抽出されたテスト数: {uniqueTests.length}": "抽出されたテスト数: {uniqueTests.length}",
-  "ファイル: {test.filePath}, テスト: {test.testName}": "ファイル: {test.filePath}, テスト: {test.testName}",
-  "(check-all) 全てのテストを選択": "(check-all) 全てのテストを選択",
+  "抽出されたテスト数: {uniqueTestsLength}": "抽出されたテスト数: {uniqueTestsLength}",
+  "ファイル: {filePath}, テスト: {testName}": "ファイル: {filePath}, テスト: {testName}",
+  "失敗テスト: {failedTestsLength}件": "失敗テスト: {failedTestsLength}件",
+  "コピーするテストファイルを選択してください": "コピーするテストファイルを選択してください",
+  "全てのテストを選択": "全てのテストを選択",
+  "({failedTestsLength}件)": "({failedTestsLength}件)",
   "コピーするテストを選択してください": "コピーするテストを選択してください",
   "アクティブなターミナルが見つかりません": "アクティブなターミナルが見つかりません",
   "ターミナルテキストのキャプチャに失敗:": "ターミナルテキストのキャプチャに失敗:",
   "クリップボードへのコピーに失敗しました:": "クリップボードへのコピーに失敗しました:",
   "エラーのみ": "エラーのみ",
   "すべての診断情報": "すべての診断情報",
-  "(message)をクリップボードにコピーしました！": "(message)をクリップボードにコピーしました！",
+  "{message}をクリップボードにコピーしました！": "{message}をクリップボードにコピーしました！",
   "現在のファイルにエラーがありません。": "現在のファイルにエラーがありません。",
   "現在のファイルに診断情報がありません。": "現在のファイルに診断情報がありません。",
   "アクティブなエディタが見つかりません。": "アクティブなエディタが見つかりません。",
@@ -77,7 +83,6 @@ src/l10n/bundle.l10n.json
   "{selectedTests.length}件の失敗したテストをコピーしました": "{selectedTests.length}件の失敗したテストをコピーしました",
   "テスト結果のコピーに失敗しました": "テスト結果のコピーに失敗しました"
 }
-
 ----
 src/test/extension.test.ts
 import * as assert from 'assert';
@@ -655,14 +660,16 @@ export async function showTestFileSelectionUI(
   // QuickPickアイテムに変換
   const items: TestFileQuickPickItem[] = testGroups.map((group) => ({
     label: group.displayName,
-    description: `失敗テスト: ${group.failedTests.length}件`,
+    description: vscode.l10n.t('失敗テスト: {failedTestsLength}件', {
+      failedTestsLength: group.failedTests.length,
+    }),
     detail: group.filePath,
     fileGroup: group,
   }));
 
   // QuickPickを表示
   const selectedItem = await vscode.window.showQuickPick(items, {
-    placeHolder: 'コピーするテストファイルを選択してください',
+    placeHolder: vscode.l10n.t('コピーするテストファイルを選択してください'),
     matchOnDescription: true,
     matchOnDetail: true,
   });
@@ -687,8 +694,10 @@ export async function showIndividualTestSelectionUI(
 
   // 「全てのテストを選択」オプションを追加
   const allTestsOption: vscode.QuickPickItem = {
-    label: vscode.l10n.t('(check-all) 全てのテストを選択'),
-    description: `({fileGroup.failedTests.length}件)`,
+    label: vscode.l10n.t('全てのテストを選択'),
+    description: vscode.l10n.t('({failedTestsLength}件)', {
+      failedTestsLength: fileGroup.failedTests.length,
+    }),
     kind: vscode.QuickPickItemKind.Separator,
   };
 
@@ -795,11 +804,16 @@ export function parseVitestOutput(text: string): FailedTest[] {
 
   // デバッグ情報
   console.log(
-    vscode.l10n.t(`抽出されたテスト数: {uniqueTests.length}`)
+    vscode.l10n.t('抽出されたテスト数: {uniqueTestsLength}', {
+      uniqueTestsLength: uniqueTests.length,
+    })
   );
   uniqueTests.forEach((test) => {
     console.log(
-      vscode.l10n.t(`ファイル: {test.filePath}, テスト: {test.testName}`)
+      vscode.l10n.t('ファイル: {filePath}, テスト: {testName}', {
+        filePath: test.filePath,
+        testName: test.testName,
+      })
     );
   });
 
@@ -1641,9 +1655,12 @@ export function showCopySuccessMessage(isErrorsOnly: boolean = false): void {
     ? vscode.l10n.t('エラーのみ')
     : vscode.l10n.t('すべての診断情報');
 
-   message =  vscode.l10n.t('(message)をクリップボードにコピーしました！');
-
-  showTimedMessage(message, 'info');
+  showTimedMessage(
+    vscode.l10n.t('{message}をクリップボードにコピーしました！', {
+      message: message,
+    }),
+    'info'
+  );
 }
 
 /**

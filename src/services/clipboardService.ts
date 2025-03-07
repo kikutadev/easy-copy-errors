@@ -64,9 +64,12 @@ export function showCopySuccessMessage(isErrorsOnly: boolean = false): void {
     ? vscode.l10n.t('エラーのみ')
     : vscode.l10n.t('すべての診断情報');
 
-   message =  vscode.l10n.t('(message)をクリップボードにコピーしました！');
-
-  showTimedMessage(message, 'info');
+  showTimedMessage(
+    vscode.l10n.t('{message}をクリップボードにコピーしました！', {
+      message: message,
+    }),
+    'info'
+  );
 }
 
 /**
