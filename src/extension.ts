@@ -5,7 +5,7 @@ import {
   copyGroupedDiagnosticsHandler,
   copyGroupedErrorsOnlyHandler,
 } from './commands/errorCommands';
-import { copyVitestResultsHandler } from './commands/terminalCommands';
+import { copyVitestResultsHandler } from './commands/vitestCommands';
 
 export function activate(context: vscode.ExtensionContext) {
   console.log('Extension "easy-copy-errors" is now active');
