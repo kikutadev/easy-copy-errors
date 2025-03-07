@@ -1,6 +1,6 @@
 // src/services/testSelectionService.ts
 import * as vscode from 'vscode';
-import { TestFileGroup, FailedTest } from './vitestParserService';
+import { FailedTest, TestFileGroup } from './vitestParserService';
 
 /**
  * テストファイル選択用のQuickPickアイテム
@@ -51,7 +51,7 @@ export async function showTestFileSelectionUI(
 /**
  * 個別テスト選択UIを表示
  * 指定されたファイルグループ内のテストを選択するUIを提供する
- * 複数選択可能で、「全てのテストを選択」オプションも提供
+ * 複数選択可能で、デフォルトで全テストが選択された状態で表示する
  * @param fileGroup テストファイルグループ
  * @returns 選択されたテスト配列、またはキャンセルされた場合はundefined
  */
@@ -76,23 +76,28 @@ export async function showIndividualTestSelectionUI(
     description: test.lineNumber ? `行: ${test.lineNumber}` : '',
     detail: test.errorMessage,
     test: test,
+    picked: true, // デフォルトで全てのテストを選択状態にする
   }));
 
-  // マルチ選択QuickPickを表示
-  const selectedItems = (await vscode.window.showQuickPick(
+  const selectedItems = await vscode.window.showQuickPick(
     [allTestsOption, ...testItems],
     {
-      placeHolder: 'コピーするテストを選択してください（複数選択可）',
+      placeHolder: 'コピーするテストを選択してください',
       canPickMany: true,
       matchOnDescription: true,
       matchOnDetail: true,
     }
-  )) as TestQuickPickItem[];
+  );
 
   // 選択されたアイテムがない場合
   if (!selectedItems || selectedItems.length === 0) {
     return undefined;
   }
+
+  // 型安全な変換を行う
+  const selectedTestItems = selectedItems.filter(
+    (item): item is TestQuickPickItem => 'test' in item
+  );
 
   // 「全てのテストを選択」が選ばれていれば全テストを返す
   if (selectedItems.some((item) => item.label === allTestsOption.label)) {
@@ -100,5 +105,5 @@ export async function showIndividualTestSelectionUI(
   }
 
   // 選択されたテストを返す
-  return selectedItems.map((item) => item.test);
+  return selectedTestItems.map((item) => item.test);
 }
