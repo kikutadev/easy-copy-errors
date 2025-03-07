@@ -41,10 +41,19 @@ export function extractReceived(text: string): string {
  * @returns 抽出されたコードスニペットの文字列、見つからない場合は空文字列
  */
 export function extractCodeSnippet(text: string): string {
-  for (const pattern of VitestPatterns.codeSnippet) {
-    const match = pattern.exec(text);
-    if (match) {
-      return match[0].trim();
+  // Number of calls: の後にスニペットがある場合も抽出できるようにするため、
+  // まず "received" 部分と "code snippet" 部分を連結する可能性を検討
+  const receivedMatch = extractReceived(text);
+  if (receivedMatch && receivedMatch.includes('Number of calls:')) {
+    // receivedの後に続くコードスニペットを探す
+    const afterReceived = text.substring(
+      text.indexOf(receivedMatch) + receivedMatch.length
+    );
+    for (const pattern of VitestPatterns.codeSnippet) {
+      const snippetMatch = pattern.exec(afterReceived);
+      if (snippetMatch) {
+        return snippetMatch[0].trim();
+      }
     }
   }
   return '';

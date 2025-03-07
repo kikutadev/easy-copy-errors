@@ -39,11 +39,11 @@ export const VitestPatterns = {
    * コードスニペット抽出パターン群
    */
   codeSnippet: [
-    // Vitestの行番号つきコードスニペット (❯ から始まる形式)
-    /❯\s+[\w/\.\-]+:\d+:\d+[\s\S]*?(?=\n\n|\n\s*❯|\n\s*FAIL|\n\s*$|$)/s,
+    // Vitestの行番号つきコードスニペット (❯ から始まる行を含む最小限のブロック)
+    /❯\s+[\w/\.\-]+:\d+:\d+[\s\S]*?(?=\n\s*⎯{10,}|\n\s*FAIL|\n\s*$|$)/s,
 
-    // 行番号とパイプ記号を含むコードスニペット
-    /\n\s*\d+\s*\|\s*.+\n\s*\d+\s*\|\s*.+\n\s*\d+\s*\|\s*.+/s,
+    // 行番号とパイプ記号を含むコードスニペット（より多くの行を含むようにパターンを改善）
+    /\n\s*\d+\s*\|\s*.+\n\s*\d+\s*\|\s*.+\n\s*\d+\s*\|\s*.+(?:\n\s*\d+\s*\|\s*.+)*/s,
 
     // カラット(^)を含むコード行
     /\n\s*\d+\s*\|.*\n\s*\|.*\^.*\n/s,
@@ -68,7 +68,8 @@ export const VitestPatterns = {
    * 実際値抽出パターン群
    */
   received: [
-    /Received:[\s\S]*?(?=\n\s*Number of calls:|\n\s*$)/,
+    // Receivedとその後のNumber of callsまでを一括で抽出するように改善
+    /Received:[\s\S]*?Number of calls:[\s\S]*?(?=\n\s*❯|\n\s*⎯{10,}|\n\s*$)/s,
     /Actual:[\s\S]*?(?=\n\s*$|$)/,
     /But got:[\s\S]*?(?=\n\s*$|$)/,
     /Instead received:[\s\S]*?(?=\n\s*$|$)/,
